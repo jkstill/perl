@@ -9,13 +9,12 @@ main() if not caller();
 sub main {
 	use strict;
 	use warnings;
-	use Data::Dumper;
 
 	my $m = Module::Detect->new(
 		{
 			'Dumper' => {
 				Name => 'Data::Dumper',
-				Action => sub{return Dumper(@_)},
+				Action => sub{eval 'return Dumper(@_)'},
 			},
 
 			'NotExist' => {
