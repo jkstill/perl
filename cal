@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+$year=1994;
+
+$month=6;
+$cal{$month . $year} = `/bin/cal $month $year"`;
+
+$month=7;
+$cal{$month . $year} = `/bin/cal $month $year"`;
+
+$month=8;
+$cal{$month . $year} = `/bin/cal $month $year"`;
+
+$month=9;
+$cal{$month . $year} = `/bin/cal $month $year"`;
+
+
+$month=6;
+print $cal{$month . $year},"\n";
+
+$month=7;
+print $cal{$month . $year},"\n";
+
+$month=8;
+print $cal{$month . $year},"\n";
+
+$month=9;
+print $cal{$month . $year},"\n";
+

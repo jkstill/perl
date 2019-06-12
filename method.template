@@ -1,0 +1,73 @@
+
+
+# here's how to call one from the super class
+
+sub finish {
+	my $self = shift;
+	$self->SUPER::finish;
+}
+
+
+# here's a method example
+
+sub next {
+	my $self = shift;
+	my $hash = $self->fetchrow_hashref;
+	if ( ! defined($hash) ) { 
+		return undef;
+	}
+	return $hash;
+}
+
+
+sub all {
+	my $self = shift;
+	my $array = $self->fetchall_arrayref;
+
+	if ( ! defined($array) ) { 
+		return undef;
+	}
+	return $array;
+}
+
+=head1 getColumns
+
+here's another example
+
+getColumns($sth);
+
+returns a hash of column names, with the
+column names as the key, and the position
+of the column as the value
+
+example:
+
+	my $vobj = new GQ($dbh,'v$parameter');
+	die "GQ object creation failed \n" unless $vobj;
+  
+	my $arrayRowRef = $vobj->all;
+	my $colNames = $vobj->getColumns;
+ 
+	for $row ( @$arrayRowRef ) {
+		print "PARM: $row->[$colNames->{NAME}]  VALUE: $row->[$colNames->{VALUE}]\n";
+	}
+
+
+=cut
+
+sub getColumns {
+	my $self = shift;
+	my @columns = @{ $self->{NAME_uc} };
+	if ( ! @columns ) { 
+		return undef;
+	}
+
+	my $colOrder = {};
+	for my $el ( 0 .. $#columns ) {
+		#print "col num:  $el  col name: $columns[$el] \n";
+		$colOrder->{$columns[$el]} = $el;
+	}
+
+	return $colOrder;
+}
+

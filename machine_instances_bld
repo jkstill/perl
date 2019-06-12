@@ -1,0 +1,43 @@
+#!/home/oracle/perl -w
+
+# populates table used by show_server_free.sql
+
+use strict;
+no strict qw{ vars };
+use DBI;
+use OraEnv;
+
+
+$instance='dv07';
+$username='jkstill';
+OraEnv::SetEnv($instance);
+$password = OraEnv::GetPassWord($instance,$username);
+
+
+OraEnv::GetInstanceList(\%Instances);
+
+my $dbh = DBI->connect( 'dbi:Oracle:' . $instance, $username, $password,
+	{RaiseError=>1, AutoCommit=>0} ) || die "Cannot connect to $instance - $DBI::errstr\n";
+
+eval {
+	$dbh->do('truncate table machine_instances');
+};
+
+die $DBI::errstr if $@;
+
+$InsertSql = qq{insert into machine_instances ( machine, instance ) values(?,?)};
+
+my $sth = $dbh->prepare($InsertSql);
+
+for $NewInstance ( keys %Instances ) {
+	$sth->bind_param(1,$Instances{$NewInstance},DBI::SQL_VARCHAR);
+	$sth->bind_param(2,$NewInstance,DBI::SQL_VARCHAR);
+	$sth->execute();
+}
+
+$dbh->commit;
+$sth->finish;
+$dbh->disconnect;
+
+
+

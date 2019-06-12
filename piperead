@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+
+# pipe reader - this program is called by pipewrite
+
+$piperead = shift || die "need a pipe~ \n";
+
+if ( ! -p $piperead ) { die "$piperead is not a pipe!\n"}
+
+open(PIPE,"$piperead") || die " unable to open $piperead\n";
+
+while(<PIPE>)
+{
+	@ARGS = split;
+	print STDERR "ARGS in piperead - GRP_PK: $ARGS[0], DATE: $ARGS[1]: USER: $ARGS[2]\n";
+}
+
+# remove the pipe when finished
+unlink $piperead || die "error removing pipe $piperead in piperead\n";
+
+

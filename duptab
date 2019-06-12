@@ -1,0 +1,303 @@
+#!/home/oracle/perl 
+
+# create a SQL script to create the following:
+#		duplicate table
+# 		indexes
+#		primary key
+#		foreign key constraints
+#		triggers
+#		check constraints
+
+BEGIN {
+	$Oraperl::safe=1;
+}
+
+use Oraperl;
+
+@Prompts=(
+	"Login Username:",
+	"Login Password:",
+	"Owner of table to copy: ",
+	"Source Table: ",
+	"Destination Table: "
+);
+
+@VarNames = (
+	"Username",
+	"Password",
+	"TableOwner",
+	"SourceTable",
+	"DestTable"
+);
+
+$ref='';
+
+for $elm ( 0..$#VarNames ) {
+	$ref = $VarNames[$elm];
+	$$ref = '';
+}
+
+for $elm ( 0..$#VarNames ) {
+
+	GET_INPUT:
+	print "\n$Prompts[$elm]";
+	$ref = $VarNames[$elm];
+	$$ref = <>;
+	chomp $$ref;
+	goto GET_INPUT unless $$ref;
+	$$ref = uc($$ref);
+}
+
+#print "OWNER : $TableOwner\n";
+#print "SOURCE: $SourceTable\n";
+#print "DEST  : $DestTable\n";
+
+&InitSql;
+
+$DB = $ENV{TWO_TASK} ? $ENV{TWO_TASK} : $ENV{ORACLE_SID};
+
+print STDOUT "Assuming that the database is $DB\n";
+
+$lda = ora_login($DB,$Username,$Password ) || die "unable to login to $DB\n";
+#$lda = ora_login('','/','/' ) || die "unable to login to $DB\n";
+
+open(SQL,">duptab.sql") || die "cannot create dup.sql\n";
+
+print SQL "set pages 0 feed on echo on pause off\n";
+print SQL "spool duptab.lis\n\n";
+
+##########################################3
+# create the destination table
+print STDOUT "Create table $DestTable\n";
+print SQL "create table ",lc(${DestTable}),
+	" as select * from ", lc(${TableOwner}), ".", lc(${SourceTable}), " where rownum < 1;\n\n";
+
+##########################################3
+# create the indexes
+print STDOUT "Building Indexes\n";
+$IndexNameCursor = ora_open($lda,$SQL{IND_NAMES}) || die "error opening IndexNameCursor\n";
+while ( ($IndexName,$Uniqueness) = ora_fetch($IndexNameCursor) ) {
+	die "error fetching index names\n"  if $ora_errstr ;
+
+	print STDOUT "Index: $IndexName\n";
+	print SQL "create ", 
+		$Uniqueness eq 'UNIQUE'  ? 'unique' :  '', 
+		" index ", lc($IndexName), " on ", lc($DestTable), "(";
+
+	$IndexColCursor = ora_open($lda,$SQL{IND_COLUMNS}) || die "error opening IndexColCursor\n";
+	ora_bind($IndexColCursor,$IndexName);
+
+	@ColList=();
+	while ( ($ColName ) = ora_fetch($IndexColCursor) ) {
+		die "error fetching index column names\n"  if $ora_errstr ;
+		push(@ColList,$ColName);
+		print STDOUT "\t$ColName\n";
+	}
+	ora_close($IndexColCursor) || die "error closing IndexColCursor\n";
+
+	for $Col ( 0..$#ColList ) {
+		print SQL lc($ColList[$Col]);
+		print SQL "," unless $Col == $#ColList;
+	}
+	print SQL ");\n\n";
+
+}
+ora_close($IndexNameCursor);
+
+
+##########################################3
+# build primary key
+print STDOUT "Building Primary Key\n";
+$PkNameCursor = ora_open($lda,$SQL{PK_NAME}) || die "error opening PkNameCursor\n";
+($PkName) = ora_fetch($PkNameCursor);
+die "error fetching Pk Name\n"  if $ora_errstr ;
+ora_close($PkNameCursor);
+
+
+print SQL "alter table ", lc($DestTable), " add constraint ", lc($PkName),"\n";
+print SQL "\tprimary key(";
+
+@ColList=();
+$PkCursor = ora_open($lda,$SQL{PK}) || die "error opening PKCursor\n";
+ora_bind($PkCursor,$PkName);
+while ( ($PkCol) = ora_fetch($PkCursor) ) {
+	die "error fetching Pk columns\n"  if $ora_errstr ;
+	push(@ColList,$PkCol);
+	print STDOUT "\t$PkCol\n";
+}
+ora_close($PkCursor);
+
+for $Col ( 0..$#ColList ) {
+	print SQL lc($ColList[$Col]);
+	print SQL "," unless $Col == $#ColList;
+}
+
+print SQL ")\n";
+print SQL '/',"\n\n";
+
+##########################################3
+# create the foreign keys
+print STDOUT "Building Foreign Keys\n";
+$FkNameCursor = ora_open($lda,$SQL{FK_NAMES}) || die "error opening FkNameCursor\n";
+while ( ($Constraint, $RemoteConstraint, $RemoteTable, $RemoteOwner) = ora_fetch($FkNameCursor) ) {
+	die "error fetching foreign names\n"  if $ora_errstr ;
+
+	print STDOUT "Foreign Key: $FkName\n";
+	print SQL "alter table ", lc($DestTable), " add constraint ", lc($Constraint),"\n", 
+		"\tforeign key(";
+
+	$FkColCursor = ora_open($lda,$SQL{FK_COLUMNS}) || die "error opening FkColCursor\n";
+	ora_bind($FkColCursor,$Constraint);
+
+	@ColList=();
+	while ( ($ColName ) = ora_fetch($FkColCursor) ) {
+		die "error fetching FK column names\n"  if $ora_errstr ;
+		push(@ColList,$ColName);
+		print STDOUT "\t$ColName\n";
+	}
+	ora_close($FkColCursor) || die "error closing FkColCursor\n";
+
+	for $Col ( 0..$#ColList ) {
+		print SQL lc($ColList[$Col]);
+		print SQL "," unless $Col == $#ColList;
+	}
+	print SQL ")\n";
+
+	print STDOUT "References Table: ${RemoteOwner}.${RemoteTable}\n";
+	print SQL "\treferences ", lc(${RemoteOwner}), ".", lc(${RemoteTable}), " (";
+
+	print STDOUT "References Columns: $FkName\n";
+
+	$FkRemColCursor = ora_open($lda,$SQL{FK_R_COLUMNS}) || die "error opening FkColCursor\n";
+	ora_bind($FkRemColCursor, $RemoteTable, $RemoteOwner, $RemoteConstraint);
+
+	@ColList=();
+	while ( ($ColName ) = ora_fetch($FkRemColCursor) ) {
+		die "error fetching Remote FK column names\n"  if $ora_errstr ;
+		push(@ColList,$ColName);
+		print STDOUT "\t$ColName\n";
+	}
+	ora_close($FkRemColCursor) || die "error closing FkRemColCursor\n";
+
+	for $Col ( 0..$#ColList ) {
+		print SQL lc($ColList[$Col]);
+		print SQL "," unless $Col == $#ColList;
+	}
+	print SQL ")\n";
+	print SQL '/',"\n\n";
+
+}
+ora_close($FkNameCursor);
+
+#####################################################
+# create the triggers
+# code generated for triggers may require editing
+
+$ora_long = 20000;	# for trigger body
+print STDOUT "Building triggers\n";
+$TriggerCursor = ora_open($lda,$SQL{TRIGGERS}) || die "error opening TriggerCursor\n";
+while ( ($TrgName,$TrgDesc,$TrgBody) = ora_fetch($TriggerCursor) ) {
+	die "error fetching triggers\n"  if $ora_errstr ;
+
+	print STDOUT "Trigger: $TrgName\n";
+	$TrgDesc =~ s/on $SourceTable/on $DestTable/img;
+	print SQL "create or replace trigger ", lc($TrgDesc);
+
+	$TrgBody =~ s/$SourceTable/$DestTable/img;
+	print SQL lc($TrgBody);
+	print SQL "/\n\n";
+
+}
+ora_close($TriggerCursor);
+
+##########################################3
+# build check constraints
+print STDOUT "Building Check Constraints\n";
+$ConsCursor = ora_open($lda,$SQL{CONS_NAMES}) || die "error opening ConsCursor\n";
+while ( ($Constraint, $Condition) = ora_fetch($ConsCursor) ) {
+	die "error fetching Pk columns\n"  if $ora_errstr ;
+	print STDOUT "Check Constraint: $Constraint\n";
+	print SQL "alter table ", lc($DestTable), " add constraint ", lc($Constraint), "\n";
+	print SQL "\tcheck(\n";
+	print SQL "\t\t$Condition\n";
+	print SQL "\t)\n";
+	print SQL "/\n\n";
+}
+ora_close($ConsCursor);
+
+print SQL "spool off\n\n";
+
+ora_logoff($lda) || die "error logging out of $DB\n";
+
+
+#######################################################
+# end of main
+#######################################################
+
+sub InitSql {
+
+	$SQL{PK_NAME} = "select constraint_name
+			from dba_constraints
+			where owner = '$TableOwner'
+			and table_name = '$SourceTable'
+			and constraint_type = 'P'";
+
+	$SQL{PK} = "select column_name
+		from dba_cons_columns
+		where constraint_name = :1
+		and owner = '$TableOwner'
+		and table_name = '$SourceTable'
+		order by position";
+
+	$SQL{IND_NAMES} = "select index_name,uniqueness
+			from dba_indexes
+			where owner = '$TableOwner'
+			and table_name = '$SourceTable'";
+
+	$SQL{IND_COLUMNS} = "select column_name
+		from dba_ind_columns
+		where index_name = :1
+		and index_owner = '$TableOwner'
+		order by column_position";
+
+	$SQL{FK_NAMES} =  " select a.constraint_name, a.r_constraint_name, r.table_name, r.owner
+			from dba_constraints a, dba_constraints r
+			where a.owner = '$TableOwner'
+			and a.table_name = '$SourceTable'
+			and a.constraint_type = 'R'
+			and r.constraint_name = a.r_constraint_name
+			and r.owner = a.r_owner";
+
+	$SQL{FK_COLUMNS} = " select column_name
+		from dba_cons_columns
+		where table_name = '$SourceTable'
+		and owner = '$TableOwner'
+		and constraint_name = :1
+		order by position";
+
+	$SQL{FK_R_COLUMNS} = "select b.column_name
+		from dba_constraints a, dba_cons_columns b
+		where a.table_name = :1
+		and a.owner = :2
+		and a.constraint_name = :3
+		and b.owner = a.owner
+		and b.table_name = a.table_name
+		and b.constraint_name = a.constraint_name
+		order by position";
+
+	$SQL{TRIGGERS} = "select trigger_name,description, trigger_body
+		from dba_triggers
+		where table_name = '$SourceTable'
+		and owner = '$TableOwner'";
+
+	$SQL{CONS_NAMES} = "select constraint_name, search_condition
+		from dba_constraints
+		where owner = '$TableOwner'
+		and table_name = '$SourceTable'
+		and constraint_type = 'C'
+		and constraint_name not like 'SYS%'";
+
+}
+
+
+

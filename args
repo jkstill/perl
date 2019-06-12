@@ -1,0 +1,223 @@
+#!/home/oracle/perl -w
+
+
+# 7.99 petabytes
+use constant MAX_BYTES =>  2**50 * 7.99;
+my $MAX_BYTES=\MAX_BYTES;
+
+use constant DEBUG => 1;
+my $DEBUG = \DEBUG;
+
+
+my %ddArgs=();
+my @convArgs=();
+
+processArgs(\%ddArgs, \@convArgs );
+printArgs(\%ddArgs, \@convArgs ) if $$DEBUG;
+
+	#my %ddArgs = (
+		#if => 'STDIN',
+		#of => 'STDOUT',
+		#ibs	=> 512,
+		#obs	=> 512,
+		#cbs	=> 512
+	#);
+
+if ( $ddArgs{if} ne 'STDIN' ) { 
+	open(STDIN,$ddArgs{if}) || die "unable to create $ddArgs{if} - $!\n";
+}
+
+sub processArgs {
+
+	my ( $ddArgsHashRef, $convArgsAryRef ) = @_;
+
+	# lists of incompatible options for conv=
+	# only one from any list may be specified
+	my %invalidConvCombos = (
+		charsets	=> [ qw{ ascii ebcdic ibm } ],
+		blocking	=> [ qw{ block unblock } ],
+		case		=> [ qw{ ucase lcase } ]
+	);
+
+	# valid arguments to dd
+	my %validArgs=(
+		if		=> 'a',
+		of		=> 'a',
+		ibs	=> 'n',
+		obs	=> 'n',
+		bs		=> 'n',
+		cbs	=> 'n',
+		skip	=> 'n',
+		seek	=> 'n',
+		count	=> 'n',
+		conv	=> 'a'
+	);
+
+	# which arguments take alpha or numeric arguments?
+	my @numericArgs = (); my @alphaArgs = ();
+	foreach my $key ( keys %validArgs ) {
+		if ( $validArgs{$key} eq 'n' ) { push @numericArgs, $key }
+		else { push @alphaArgs, $key }
+	}
+
+	# list of all valid options for conv
+	my @validConv=qw{ swab noerror notrunc sync };
+	foreach my $key ( keys %invalidConvCombos ) {
+		push @validConv, @{$invalidConvCombos{$key}};
+	}
+
+	# number of bytes per suffix designation - binary
+	# only works thru MAX_BYTES ( 7.99 petabytes )
+	# kilobyte, megabyte, gigabyte, terabyte, petabyte
+	my %byteSize = (
+		c => 1,
+		w => 2,
+		b => 512,
+		k => 2**10,
+		m => 2**20,
+		g => 2**30,
+		t => 2**40,
+		p => 2**50
+	);
+
+	# number of bytes per suffix designation - decimal
+	my %byteSizeD = (
+		k => 10**3,
+		m => 10**6,
+		g => 10**9,
+		t => 10**12,
+		p => 10**15
+	);
+
+	my $byteSizeKeys = join('|', keys %byteSize);
+	my $byteSizeKeysD = join('|', keys %byteSizeD);
+
+	print "ARGS: ", join( ' - ', sort keys %validArgs), "\n" if $$DEBUG;
+	print "CONV: ", join( ' - ', sort @validConv), "\n" if $$DEBUG;
+
+	foreach my $key ( keys %invalidConvCombos ) {
+		print "key: $key  " if $$DEBUG;
+		print join  ' - ', @{$invalidConvCombos{$key}}, "\n" if $$DEBUG;
+	}
+
+	print "\n\n" if $$DEBUG;
+
+	# process the command line
+	# a real chore with dd
+	my @convArgs;
+
+	# establish defaults
+	my %ddArgs = (
+		if => 'STDIN',
+		of => 'STDOUT',
+		ibs	=> 512,
+		obs	=> 512,
+		cbs	=> 512
+	);
+
+	foreach my $cmdArg ( @ARGV ) {
+
+		die "$cmdArg is an invalid argument to dd\n" unless $cmdArg =~ /=/;
+
+		my ( $parmName, $parmValue ) = split(/=/, $cmdArg );
+		#print "ARG: $cmdArg\n";
+		print "PARM:  $parmName  VALUE: $parmValue\n" if $$DEBUG;
+	
+		# check for valid parameter name
+		die "$parmName is an invalid parameter\n" unless grep(/^$parmName$/, keys %validArgs );
+
+
+		# do not allow conflicting options in the 'conv=' arg
+		# e.g.  block,unblock -  lcase,ucase
+		# the count of elements in the array @convArgs matching
+		# > 1 element in $invalidConvCombos will cause
+		# a fatal error
+		if ( $parmName eq 'conv' ) {
+
+			@convArgs = split /,/, $parmValue;
+			print "\n\nCONV SECTION:\n" if $$DEBUG;
+
+			# check for invalid argumements to conv
+			foreach my $carg ( @convArgs ) {
+				if ( ! grep(/^$carg$/, @validConv)  ) {
+					die "$carg is an invalid arg for conv=\n";
+				}
+			}
+
+			foreach my $key ( keys %invalidConvCombos ) {
+
+				print "\tKEY: $key\n" if $$DEBUG;
+				print join(' - ', @{$invalidConvCombos{$key}}), ' : ', join(' - ',@convArgs), "\n" if $$DEBUG;
+		
+				my $chkForInvalidConvCombos = join('|',@{$invalidConvCombos{$key}});
+				my @chkinv = grep( /^$chkForInvalidConvCombos$/,   @convArgs );
+				die "incompatible args for conv - $cmdArg\n" if $#chkinv > 0;
+
+			}
+			next;	# next set of cmdline args
+		}
+
+		#check type - the only types are alpha and numeric
+		# so we really only need to check type of numerics
+		# which MAY have an alpha character suffix
+		# first you must check for suffixes
+		if ( $validArgs{$parmName}  eq 'n' ) {
+
+			#make sure there is a leading numeric component
+			#print "PARMVAL: $parmValue\n";
+			( $parmValue =~ /^[0-9]+.*$/ ) or die "$cmdArg is invalid \n";
+
+			my $recordSize;
+			( $recordSize = $parmValue ) =~ s/^([0-9]+)(.*)$/$1/i;
+
+
+			#get the record blocking designators, if any
+			my $blockingFactor;
+			print "PV: $parmValue\n" if $$DEBUG;
+			( $blockingFactor = lc($parmValue) ) =~ s/^[0-9]+//i;
+
+			if ( $blockingFactor ) {
+
+				print "BF: $blockingFactor\n" if $$DEBUG;
+				$blockingFactor =~ /[$byteSizeKeys|$byteSizeKeys]{1}d{0,1}/ || do {
+					die "1: $cmdArg includes an invalid size designator\n";
+				};
+
+				if ( $blockingFactor =~ /^.d/ ) {
+					print "who1\n";
+					$ddArgs{$parmName} = $recordSize * $byteSizeD{ substr($blockingFactor,0,1) };
+				} else {
+					print "who2\n";
+					$ddArgs{$parmName} = $recordSize * $byteSize{ substr($blockingFactor,0,1) };
+				}
+
+			} else { $ddArgs{$parmName} = $recordSize }
+
+		} else { $ddArgs{$parmName} = $parmValue }
+		
+	}
+
+	if ( $ddArgs{bs} ) { $ddArgs{ibs} = $ddArgs{obs} = $ddArgs{bs} }
+
+	%$ddArgsHashRef = %ddArgs;
+	@$convArgsAryRef= @convArgs
+
+}
+
+sub printArgs {
+	
+	my ( $ddArgsHashRef, $convArgsAryRef ) = @_;
+	print "DDARGS:\n";
+	foreach my $key ( keys %ddArgs ) {
+		printf("\targ: %-6s value: %s\n",$key, $ddArgs{$key});
+	}
+
+	print "CONVARGS:\n";
+	foreach my $el ( @convArgs ) {
+		printf("\targ: %-6s\n",$el);
+	}
+
+
+}
+1;
+

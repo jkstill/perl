@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+
+#if any of these are recieved it will tell the backup what to do
+#BEGIN_BACKUP 
+#END_BACKUP 
+#ABORT
+#ALL_DONE
+
+($port) = @ARGV;
+$port = 2345 unless $port;
+
+$AF_INET = 2;
+$SOCK_STREAM = 1;
+
+$sockaddr = 'S n a4 x8';
+
+($name, $aliases, $proto) = getprotobyname('tcp');
+if ($port !~ /^\d+$/) {
+    ($name, $aliases, $port) = getservbyport($port, 'tcp');
+}
+
+#print "Port = $port\n";
+
+$this = pack($sockaddr, $AF_INET, $port, "\0\0\0\0");
+
+select(NS); $| = 1; select(stdout);
+
+socket(S, $AF_INET, $SOCK_STREAM, $proto) || die "socket: $!";
+bind(S,$this) || die "bind: $!";
+listen(S,5) || die "connect: $!";
+
+select(S); $| = 1; select(stdout);
+
+$con = 0;
+#print "Listening for connection 1....\n";
+#for(;;) {
+{
+	($addr = accept(NS,S)) || die $!;
+
+	if (($child = fork()) == 0) {
+		#print "accept ok\n";
+
+		($af,$port,$inetaddr) = unpack($sockaddr,$addr);
+		@inetaddr = unpack('C4',$inetaddr);
+		#print "$af $port @inetaddr\n";
+
+		while (<NS>) {
+
+			chop;
+			$msg=$_;
+         print $_,"\n";
+
+		}
+		close(NS);
+		exit;
+	}
+	close(NS);
+
+}
+

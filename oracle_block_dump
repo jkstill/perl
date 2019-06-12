@@ -1,0 +1,114 @@
+#!/home/oracle/perl/bin/perl
+
+
+
+use Getopt::Long;
+
+my %opctl=();
+
+GetOptions(\%optctl,
+	'file=s',
+	'blocksize=i',
+	'start_block=i',
+	'block_count=i',
+	'h|z|help'
+);
+
+if ( $optctl{h} or $optctl{z} or $optctl{help} ) {
+	usage(1);
+}
+
+if ( ! 
+	(
+		$optctl{blocksize} == 2048
+		or $optctl{blocksize} == 4096
+		or $optctl{blocksize} == 8192
+		or $optctl{blocksize} == 16384
+	)	
+) { die "invalid blocksize of $optctl{blocksize}\n" }
+
+my $blockSize = $optctl{blocksize};
+
+my $blocksToDump = $optctl{block_count} ? $optctl{block_count} : 100;
+
+my $blockOffset;
+if ( exists $optctl{start_block} and ! $optctl{start_block} ) {
+	$blockOffset = 0;
+} else {
+	$blockOffset = $optctl{start_block} ? $optctl{start_block} : 10;
+}
+my $blockNumber=$blockOffset;
+my $blockCounter = 0;
+
+my $file = $optctl{file};
+
+open(FILE, $file) || die "cannot read $file - $!\n";
+
+seek FILE, $blockSize * $blockOffset, 0;
+
+while( my $bytesRead = read(FILE,$buf,$blockSize)){
+
+	if ( $blockCounter >= $blocksToDump ) { last }
+	
+	print STDERR "Block $blockNumber\n";
+
+	print '#' x 64, "\n";
+	print '#' x 2, "Block $blockNumber\n";
+	print '#' x 64, "\n";
+	print hexPrint(\$buf);
+
+	$blockNumber++;
+	$blockCounter++;
+}
+
+
+
+sub hexPrint {
+
+	my $blockRef = shift;
+
+	my $offset = 0;
+	my $bufLen = 16;
+	my $formattedBlock ='';
+
+	while ( my $data = substr( ${$blockRef}, $offset, $bufLen)) {
+		@array = unpack('N4', $data);
+		$data =~ tr/\0-\37\177-\377/./;
+		$formattedBlock .= sprintf "%8.8lx   %8.8lx %8.8lx %8.8lx %8.8lx   %s\n", $offset, @array, $data;
+		$offset += $bufLen;
+	}
+	return $formattedBlock;
+}
+
+
+sub usage {
+
+	my $exitLevel= shift;
+
+	print q{
+
+oracle_block_dump - read oracle datafile blocks and output in hex dump format
+
+  -file         name of Oracle datafile to dump
+  -blocksize    blocksize of your database or the datafile
+  -start_block  block offset to start dumping
+  -block_count  how many blocks to dump
+
+  e.g.  dump 100 blocks from USERS beginning with block
+        # 254 and dump 100 blocks
+
+  oracle_block_dump \
+    -file /u01/oradata/orcl/users_01.dbf \
+    -blocksize 8192 \
+    -start_block 254
+    -block_count 100
+
+
+};
+
+	exit $exitLevel;
+
+};
+
+
+

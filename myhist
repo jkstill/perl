@@ -1,0 +1,500 @@
+perl -cw t.pl
+perl  t.pl
+vi t.pl
+perl  t.pl
+vi t.pl
+perl  t.pl
+vi t.pl
+perl  t.pl
+vi t.pl
+perl  t.pl
+vi t.pl
+perl  t.pl
+vi t.pl
+perl  t.pl
+perl -cw t.pl
+perl  t.pl
+cat t.pl
+vi t.pl
+perl  t.pl
+vi t.pl
+perl  t.pl
+vi t.pl
+perl  t.pl
+vi t.pl
+perl  t.pl
+vi t.pl
+./ofe-test.pl
+echo $?
+./ofe-test.pl
+l
+cat mp1.sql
+vi mp1.sql
+vi q.sql
+./ofe-test.pl
+./ofe-test.pl --sql-file q.sql
+histgory
+history
+vi /home/jkstill/pdbatk/beta/PDBA/blib/script/kss.pl
+clear
+cd
+cd perl
+perl pp.pl
+perldoc Exporter
+perl pp.pl
+perldoc Exporter
+perl pp.pl
+l *.pm
+ls -ltar *.pm
+perl pp.pl
+cat > t
+vi t
+perl t
+perl pp.pl
+vi t
+perl t
+vi t
+perl t
+vi t
+perl t
+vi t
+perl t
+vi t
+perl t
+vi t
+perl t
+vi t
+perl t
+vi t
+perl t
+vi t
+perl pp.pl
+l *.pm
+ls -ltar *.pm
+ls -tlar
+mv Pkgtest.om Pkgtest.pm
+perl pp.pl
+vi Pkgtest.pm
+perl pp.pl
+cat > t
+vi t
+perl t
+vi t
+perl t
+vi t
+perl t
+vi t
+perl t
+vi t
+perl pp.pl
+which manually
+perl pp.pl
+perldoc -f random
+perldoc -f rnd
+perldoc perlmath
+perldoc perl
+perldoc perlfunc
+perl -e 'print int(rand(10))'
+perl -e 'print rand(10)'
+perl pp.pl
+perldoc pp.pl
+perl pp.pl
+/usr/bin/perl pp.pl
+which sqlplus
+$ORACLE_HOME/perl/bin/perl pp.pl
+perldoc warnings
+perl pp.pl
+perldoc warnings
+perl pp.pl
+move pp.pl perl-inline-modules.pl
+mv pp.pl perl-inline-modules.pl
+l perl-inline-modules.pl
+pwd
+ldir
+mkdir perl-inline-modules
+mv perl-inline-modules.pl perl-inline-modules
+ln -s perl-inline-modules/perl-inline-modules.pl .
+cd perl-inline-modules
+git status
+git init
+cd .git
+l
+vi confi
+vi config
+cd ..
+l
+vi .gitignore
+git status
+git add perl-inline-modules.pl
+git commit -m 'initial commit'
+vi README.md
+perldoc perl-inline-modules.pl
+perldoc perl-inline-modules.pl | col -b
+perldoc perl-inline-modules.pl | cat
+perldoc perl-inline-modules.pl | cat > README.md
+vi README.md
+git add README.md
+git commit -m 'added README'
+git push -u origin master
+l
+chmod u+w perl-inline-modules.pl
+perl-inline-modules.pl 
+git status
+which aws
+aws
+which ldd
+ldd
+ldd --help
+man ldd
+sudo su -
+cd
+aws
+env > /tmp/e2
+diff /tmp/e1 /tmp/e2
+unset LD_LIBRARY_PATH
+aws
+which aws
+sudo su -
+c12
+aws
+sudo su -
+aws
+LD_LIBRARY_PATCH='' aws
+unset LD_LIBRARY_PATCH aws
+LD_LIBRARY_PATCH='' aws
+unset LD_LIBRARY_PATCH 
+aws
+diff /tmp/e1 /tmp/e2
+LD_LIBRARY_PATH='' aws
+aws
+alias aws="LD_LIBRARY_PATH='' /usr/local/bin/aws'
+alias aws="LD_LIBRARY_PATH='' /usr/local/bin/aws"
+aws
+aws -help
+alias aws="LD_LIBRARY_PATH='' /usr/local/bin/aws *"
+aws -help
+alias aws="LD_LIBRARY_PATH='' /usr/local/bin/aws $*"
+aws -help
+aws-help
+aws help
+vi ~/.bashrc
+.  ~/.bashrc
+aws
+aws s3api list-buckets
+aws s3api create-buckets jkstill-dropbox-backup
+aws s3api create-bucket jkstill-dropbox-backup
+aws s3api create-bucket --bucket jkstill-dropbox-backup
+4
+l
+c12
+tnsping p1
+sqlplus sys/sl3add@js122a as sysdba
+sqlplus sys/sl3add@examples as sysdba
+pcalc
+man sfdisk
+ssh root@jap
+tsnping 
+tnsping p1
+ssh root@ora12c102rac-scan.jks.com
+ssh root@jap
+ssh root@ora12c102rac02
+g
+o oracle-script-lib
+g
+l over*
+cat oversion_major.sql
+sqlplus sys/sl3add@js122a as sysdba
+grep dd *
+cler
+cls
+clear
+ssh root@jap
+ssh root@ora12102b
+ssh root@jap
+grep accept *
+o profilers
+g
+l
+o profilers
+g
+l
+./strace-breakdown.pl cp-without-PID.trc
+l
+./strace-breakdown.pl cp-without-PID.trc
+k
+./strace-breakdown.pl cp-without-PID.trc
+git status
+git add strace-breakdown.pl
+git commit -m 'added min/max'
+git push origin master
+git branch
+git branch histograms
+git branch
+git checkout histograms
+git branch
+git commit -m 'added min/max'
+./strace-breakdown.pl cp-without-PID.trc
+./strace-breakdown.pl cp-without-PID.trc --histograms
+l ~/perl/get*
+cat /home/jkstill/perl/getopt-2.pl
+./strace-breakdown.pl cp-without-PID.trc --histograms
+./strace-breakdown.pl cp-without-PID.trc 
+perldoc -f push'
+perldoc -f push'
+perldoc -f push
+./strace-breakdown.pl cp-without-PID.trc 
+./strace-breakdown.pl cp-without-PID.trc  --histograms
+k
+./strace-breakdown.pl cp-without-PID.trc  --histograms
+grep read *.trc
+grep -c read *.trc
+./strace-breakdown.pl cp-without-PID.trc  --histograms
+perl t.pl
+cd /mnt/zips/moriarty//tmp/tmp
+l
+perl t.pl
+perl t.pl < jkstill_passwords_home.csv
+perl t.pl < jkstill_passwords_home.csv > x
+vi x
+rm x
+l
+rm jkstill_passwords_home.csv
+cd
+cd -
+perl t.pl < jkstill_passwords_home.csv
+perl t.pl < jkstill_passwords_home.csv > x
+vi x
+perl t.pl < jkstill_passwords_home.csv > x
+vi x
+perl t.pl < jkstill_passwords_home.csv | wc -l
+l
+vi jkstill_passwords_home.csv
+dos2unix jkstill_passwords_home.csv
+perl t.pl < jkstill_passwords_home.csv | wc -l
+perl t.pl < jkstill_passwords_home.csv > x
+vi x
+mv x new.csv
+l
+perl t2.pl < new.csv
+perl t2.pl < new.csv| less
+vi t2.pl
+perl t2.pl < new.csv| less
+perl t2.pl < new.csv
+'
+'
+perl t2.pl < new.csv
+l
+cp new.csv jkstill-password-import.csv
+vi jkstill_passwords_home.csv jkstill-password-import.csv
+l
+unix2dos jkstill-password-import.csv
+vi jkstill-password-import.csv
+perl t2.pl < new.csv
+cat t2.pl
+l
+rm jkstill_passwords_home.csv jkstill-password-import.csv new.csv
+cd
+man nfs
+man mount.nfs
+man -l squahs
+man -l squash
+man -k squash
+man mksquashfs 
+c12
+ql12
+sqlplus sys/sl3add@js122a as sysdba
+rxit
+exit
+ssh root@ora12102rac01
+ssh root@ora12c102rac01
+ssh root@ora12102rac01
+sudo su - 
+ssh root@jap
+nethogs
+ssh root@jap
+c12
+sqlplus sys/sl3add@js122a as sysdba
+sqlplus sys/sl3add@p1 as sysdba
+sqlplus sys/sl3add@js122a as sysdba
+sqlplus sys/sl3add@p1 as sysdba
+sqlplus jkstill/grok@p1 as sysdba
+sqlplus jkstill/grok@p1 
+sqlplus jkstill/grok@oravm
+sqlplus jkstill/grok@p1 
+c12
+sqlplus jkstill/grok@p1 
+sqlplus jkstill/grok@oravm
+screen 
+ssh root@jap
+ls
+ls -l {m*,s*}
+ls -ld {m*,s*}
+ssh root@jap
+sudo su -
+ssh root@jap
+exit
+l .ssh
+l .ssh/*ios*
+sdfsdf
+sudo su - 
+sudo su - oracle
+echo $DISPLAY
+xeyes
+sudo su - oracle
+sudo su - 
+sudo su - oracle
+ssh watson
+o zapper
+l
+g
+l
+g 1
+l ~/tmp/oracle/iod_spm.zip 
+l ~/tmp/oracle
+l /mnt/zips/moriarty/tmp/oracle/iod_spm.zip 
+unzip -l /mnt/zips/moriarty/tmp/oracle/iod_spm.zip 
+cd ..
+unzip  /mnt/zips/moriarty/tmp/oracle/iod_spm.zip 
+l
+cd _MAC*
+l
+cd _MAC*
+cd ___MAC*
+cd __MAC*
+l
+cd iod*
+l
+cd ../../iod_spm
+l
+ls -ltar
+git status
+git diff grants.sql
+vi grants.sql
+git diff iod_spm.pkb.sql
+sqlplus sys/grok@//ora122rac02/js122a.jks.com as sysdba
+c12
+sqlplus sys/grok@//ora122rac02/js122a.jks.com as sysdba
+g
+sqlplus sys/grok@//ora122rac02/js122a.jks.com as sysdba
+ssh watson
+ssh root@lestrade
+ssh root@ora122rac01
+ssh watson
+o meetings
+o service
+o kh
+l
+g
+l
+cat > north-hillsboro-elder-list.txt
+l
+sudo su - perlbrew
+perldoc vCard
+chmod u+x *.pl
+l
+./elder-vcf.pl
+./elder-vcf.pl north-hillsboro-elder-list.txt
+less north-hillsboro-elder-list.txt
+vi  north-hillsboro-elder-list.txt
+./elder-vcf.pl north-hillsboro-elder-list.txt
+perldoc -f grep
+./elder-vcf.pl north-hillsboro-elder-list.txt
+k
+./elder-vcf.pl north-hillsboro-elder-list.txt
+k
+./elder-vcf.pl north-hillsboro-elder-list.txt
+perldoc -f grep
+./elder-vcf.pl north-hillsboro-elder-list.txt
+vi north-hillsboro-elder-list.txt
+./elder-vcf.pl north-hillsboro-elder-list.txt
+perldoc Constant
+perldoc constant
+./elder-vcf.pl north-hillsboro-elder-list.txt
+vi /opt/perlbrew/perl5/perlbrew/perls/perl-5.24.0/lib/site_perl/5.24.0/vCard.pm
+./elder-vcf.pl north-hillsboro-elder-list.txt
+vi /opt/perlbrew/perl5/perlbrew/perls/perl-5.24.0/lib/site_perl/5.24.0/vCard.pm
+./elder-vcf.pl north-hillsboro-elder-list.txt
+vi /opt/perlbrew/perl5/perlbrew/perls/perl-5.24.0/lib/site_perl/5.24.0/vCard.pm
+./elder-vcf.pl north-hillsboro-elder-list.txt
+vi /opt/perlbrew/perl5/perlbrew/perls/perl-5.24.0/lib/site_perl/5.24.0/vCard.pm
+./elder-vcf.pl north-hillsboro-elder-list.txt
+l
+vi *.vcf
+./elder-vcf.pl north-hillsboro-elder-list.txt
+l
+vi Bill-Wentzek.vcf
+./elder-vcf.pl north-hillsboro-elder-list.txt
+vi Bill-Wentzek.vcf
+./elder-vcf.pl north-hillsboro-elder-list.txt
+vi Bill-Wentzek.vcf
+l
+git status
+vi .gitignore
+git status
+git add README.md elder-vcf.pl
+git commit -m initial
+l
+./elder-vcf.pl north-hillsboro-elder-list.txt
+git status
+./elder-vcf.pl north-hillsboro-elder-list.txt
+vi Aaron-Jones.vcf
+git status
+l
+less north-hillsboro-elder-list.txt
+cd .big
+cd .git
+l
+cp ~/git*conf*template config
+vi config
+git pull
+cd ..
+git pull
+l
+git stauts
+git status
+git push origin master
+l
+cd perl
+vi devel-confess.sh
+chmod u+x devel-confess.sh
+devel-confess.sh
+vi devel-confess.sh
+devel-confess.sh
+chmod u+x devel-confess.pl
+devel-confess.sh
+l devel*
+devel-confess.sh
+grep sub *
+devel-confess.sh
+grep sub *
+perl -cw devel-confess.pl
+devel-confess.sh
+vi devel-confess.sh
+devel-confess.sh
+vi devel-confess.sh
+devel-confess.sh
+vi devel-confess.sh
+devel-confess.sh
+vi devel-confess.sh
+devel-confess.sh
+vi devel-confess.sh
+devel-confess.sh
+vi devel-confess.sh
+devel-confess.sh
+man bash
+devel-confess.sh
+grep color *
+# Make every warning and error include a full stack trace
+perl -d:Confess script.pl
+# Also usable as a module
+perl -MDevel::Confess script.pl
+# display warnings in yellow and errors in red
+perl -d:Confess=color script.pl
+# set options by environment
+export DEVEL_CONFESS_OPTIONS='color dump'
+perl -d:Confess script.pl
+export DEVEL_CONFESS_OPTIONS='color dump'
+perl -d:Confess script.pl
+history -w myhist
+vi myhist
+history -w myhist

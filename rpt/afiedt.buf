@@ -1,0 +1,11 @@
+select
+	stat.sid,
+	name.name name,
+	stat.value
+from v$sesstat stat, v$statname name, v$session sess
+where
+	stat.sid = sess.sid
+	and sess.audsid = sys_context('userenv','sessionid')
+	and stat.statistic# = name.statistic#
+	and name.name like '%sort%'
+/

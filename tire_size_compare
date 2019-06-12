@@ -1,0 +1,36 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my $inchesPerMile = 5280 * 12;
+my $pi = 3.14159;
+my $millimeterPerInch = 25.4;
+
+=head1 tire_size_compare
+
+revolutions per mile, diameter and size
+
+=cut
+
+foreach my $h ( 16..18 ) {
+	foreach my $w ( qw{ 205 215 225 235 245 255 265 275 285 295 305 315 335} ) {
+		foreach my $s ( qw{30 35 40 45 50 55 60 65 70} ) {
+			# first column is revolutions per mile
+
+			my $diameter = 
+					(
+						(((( $s / 100 ) * $w ) * 2 ) / $millimeterPerInch ) # 2 x sidewall height in inches
+						+ $h
+					);
+
+			my $circumference = $diameter * $pi;
+
+			printf("%2.2f %2.2f %i-%i %i\n", 
+				$inchesPerMile / $circumference ,
+				$diameter,
+				$w,$s,$h
+			);
+		}
+	}
+}
+

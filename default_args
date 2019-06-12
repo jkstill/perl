@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+
+use Data::Dumper;
+
+my $t = new OOP(
+	arg1 => 'first parameter',
+	arg2 => 'second parameter',
+	arg4 => 'fourth parameter'
+);
+
+#print Dumper($t);
+
+print "$t->{arg1} \n";;
+print "$t->{arg2} \n";;
+print "$t->{arg3} \n";;
+print "$t->{arg4} \n";;
+
+package OOP;
+
+use Data::Dumper;
+
+sub new {
+
+	my ($class, %args) = @_;
+
+	$args{arg1} ||= 'default';
+	$args{arg2} ||= 'default';
+	$args{arg3} ||= 'default';
+	$args{arg4} ||= 'default';
+	
+	my $args = \%args;
+	bless $args, $class;
+
+}
+
+
+1;
+

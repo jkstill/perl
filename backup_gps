@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+
+# calcualate throughput required to restore a 100TB db in 48 hours
+
+$terabyte = 2**40; # terabyte
+$megabyte = 2**20;
+$gigabyte = 2**30;
+
+$dbSize = 100*$terabyte;
+
+$rto=48; # recovery time in hours
+
+# work out NICs required for both 10gbe and 1gbe
+# these values are in megabytes per second (specs for NIC are gigabits)
+# assume max is 80% of theoretical capacity
+# also assume packet over head is 20%
+
+$nic10gbeThroughput = 2**30 * 10 / 8 * .8 * .8 / 2**20; # Gig * 10 / bits-per-byte * max * overhead
+$nic1gbeThroughput = 2**30 / 8 * .8 * .8 / 2**20;
+
+$secondsAvailable = $rto * 60 * 60;
+
+# throughput in Megabytes per second
+$requiredThroughput = $dbSize / $secondsAvailable / $megabyte;
+
+=head
+
+print qq{
+
+ 1G througput: $nic1gbeThroughput
+10G througput: $nic10gbeThroughput
+
+required 
+throughput   : $requiredThroughput
+
+};
+
+=cut
+
+$required10gNICs = int($requiredThroughput / $nic10gbeThroughput + 1);
+$required1gNICs = int($requiredThroughput / $nic1gbeThroughput + 1);
+
+printf("Required Throughput: %2.1f megabytes per second\n",$requiredThroughput,2);
+print "10G NICs required  : $required10gNICs\n";
+print "1G NICs required   : $required1gNICs\n";
+
+
+

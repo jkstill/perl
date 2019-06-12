@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+use filetype;
+@file = @ARGV;
+
+@type=('flat','line delimited - equal length records','line delimited - unequal length records');
+
+for $x ( @file )
+{
+	$file = $x;
+	$type = filetype::filetype($file);
+	print "$file is a $type[$type] file\n";
+}
+

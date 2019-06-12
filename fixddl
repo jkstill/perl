@@ -1,0 +1,39 @@
+#!/home/oracle/perl/bin/perl
+
+=pod
+
+see 'indexfile_filter' for extracting SQL DDL from
+files created via 'imp indexfile=<filename>'
+
+=cut
+
+
+while(<>) {
+
+	chomp;
+	next if /^ALTER.*MODIFY.*DEFAULT NULL/io;
+	my $sql = $_;
+	my $create = $_;
+	my $columns = $_;
+	my $storage  = $_;
+	my @columns = ();
+
+	$create =~ s/(^CREATE.*?)(\(.*$)/$1/;
+	$columns =~ s/(^CREATE.*?)(\(.*\)).*STORAGE.*$/$2/;
+	$storage =~ s/(^CREATE.*?)(\(.*\))(.*STORAGE.*$)/$3/;
+
+
+	#print "SQL: $sql\n\n";
+	#print "CREATE: $create\n\n";
+	#print "COLUMNS: $columns\n\n";
+	#print "STORAGE: $storage\n\n";
+
+	@columns = split(/\,\s+\"/ ,$columns);
+
+	print $create, "\n",
+		join(",\n\t\"", @columns), "\n",
+		$storage, "\n\n";
+
+}
+
+

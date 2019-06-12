@@ -1,0 +1,98 @@
+#!/usr/bin/perl
+
+# gzipd - gzip directory compress
+# compress all text files in a specified directory
+
+require "newgetopt.pl";
+
+# ':' indicates optional arguments
+# '=' indicates mandatory arguments
+#		i = integer
+#		n = integer
+# 		f = fixed ( real ) numbers
+# 		s = string
+#		@ = array
+
+
+# process command line args
+$OptError = &NGetOpt('x=s','d=s','u','z','h');
+
+if ($OptError == 0 ) {
+	print STDERR "error in command line \n";
+	&usage();
+	exit(1);
+}
+
+if ( $opt_d eq '' ) {
+	&usage();
+	exit(1);
+}
+
+if ( ( $opt_u && $opt_z ) ||  ( ( ! $opt_u )  && (! $opt_z ) ) ) {
+	&usage();
+	exit(1);
+}
+
+$Dir = $opt_d;
+$Exclude = $opt_x;
+
+chdir( $Dir ) || die "can't chdir to $Dir \n";
+opendir( DIR, $Dir ) || die "can't open $Dir dir\n";
+
+#@LogFiles = grep(/ctp/, readdir(CTP));
+#@LogFiles = grep(!/$Exclude/, readdir(CTP));
+@LogFiles =  readdir(DIR);
+
+foreach $File ( @LogFiles ) {
+
+	if( $Exclude gt '' ) {	# exclude option
+		if(grep(/$Exclude/,$File)) {
+			next;
+		}
+	}
+
+	# skip binaries
+	if ($opt_z ) {
+		unless ( -T $File ) {
+			next;
+		}
+	}
+
+	# if unzipping - ignore all but zip files
+	if ( $opt_u ) {
+		if( ! grep(/.gz/,$File ) ) { 
+		next; 
+		}
+	}
+
+  FORK: {
+    if ($cpid = fork()) {       # parent
+		print $File, "\n";
+		wait;
+    } elsif (defined $cpid) {   # child
+      # process registration here
+		if ( $opt_z ) { $cmd = "/usr/local/bin/gzip " .  $File ; }
+		if ( $opt_u ) { $cmd = "/usr/local/bin/gunzip " .  $File ; }
+		exec($cmd);
+      exit(0);
+    } elsif ($! =~ /No more process/) { # EAGAIN is recoverable
+      sleep 2;
+      redo FORK;
+    } else {                    # wierd fork error
+      die "Could not fork child to handle registration!!!: $!\n";
+    }
+  }
+}
+
+
+sub usage {
+	print STDERR "\ngzipd - zip text files in a directory\n";
+	print STDERR "   -d: full pathname of directory\n";
+	print STDERR "   -x: regular expression of names to exclude - optional\n";
+	print STDERR "   -z: zip mode\n";
+	print STDERR "   -u: unzip mode\n";
+	print STDERR "   -h: this screen\n";
+	print STDERR "       ( either -u or -z MUST be specified ) \n";
+	return;
+}
+

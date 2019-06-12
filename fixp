@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+
+# make sure perl can find my perl library files
+$MACHINE=`uname -n`;
+chop $MACHINE;
+push(@INC,"/usr1$MACHINE/jared/perl/");
+
+# fix permissions in /usr/bin/that I messed up on AV1
+
+open(BIN,"ls -l /usr/bin |");
+
+while(<BIN>) {
+	split;
+	$owner = $_[2];
+	$group = $_[3];
+	$file  = $_[8];
+	#print "$file\n\t$owner\t$group\n";
+	print "[ -f \"$file\" ] && { \n";
+	print "\tchown $owner $file\n";
+	print "\tchgrp $group $file\n";
+	print "}\n\n";
+
+}
+

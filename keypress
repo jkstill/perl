@@ -1,0 +1,335 @@
+Newsgroups: comp.lang.perl
+Path: convex!tchrist
+From: Tom Christiansen <tchrist@convex.COM>
+Subject: Re: Related key-press problem [WAS: Re: Can YOU Catch Each Keypress?]
+Message-ID: <1992Jan31.135645.5242@convex.com>
+Originator: tchrist@pixel.convex.com
+Sender: usenet@convex.com (news access account)
+Nntp-Posting-Host: pixel.convex.com
+Reply-To: tchrist@convex.COM (Tom Christiansen)
+Organization: CONVEX Realtime Development, Colorado Springs, CO
+References: <1992Jan31.075726.7506@alf.uib.no>
+Date: Fri, 31 Jan 1992 13:56:45 GMT
+X-Disclaimer: This message was written by a user at CONVEX Computer
+              Corp. The opinions expressed are those of the user and
+              not necessarily those of CONVEX.
+Lines: 318
+
+From the keyboard of buboo@alf.uib.no (Ove Ruben R Olsen):
+:[... a lot of how to catch the cat.. errh...each key-press deleted ...]
+:
+:This is a related question:
+:
+:Maybe I've missed something totally basic, overlooked it in The Book, 
+:misread the FAQ... 
+:
+:I want the following:
+:
+:     If the a key is pressed, return the value, else continue the program.
+:
+:This is useful for writing a &deadline that run side by side in a script.
+:Yes I'm lazy, I don't wanna fork a separate process for reading the keyboard
+:
+:I would prefer if this can be done in plain Perl. And not involving stty.
+:
+:With this we could write tetris, spaceinwaders, whatever... :-))
+:
+:(I won't write games with this, just a comm. client.)
+
+You don't have to exec stty, but if you think you're going to 
+be able to get away without using an ioctl or doing anything at all 
+that's system dependent (fcntl, select, ...), then you're living
+in a dreamworld.  This stuff is simply too system dependent.
+
+At the risk of sounding like a broken record, I'm about to quote
+things many of you have probably read before.
+
+First, from the perl FAQ:
+
+16) How can I detect keyboard input without reading it?
+
+    You might check out the Frequently Asked Questions list in comp.unix.* for
+    things like this: the answer is essentially the same.  It's very system
+    dependent.  Here's one solution that works on BSD systems:
+
+        sub key_ready {
+            local($rin, $nfd);
+            vec($rin, fileno(STDIN), 1) = 1;
+            return $nfd = select($rin,undef,undef,0);
+        }
+
+    A closely related question is how to input a single character from the
+    keyboard.  Again, this is a system dependent operation.  The following 
+    code that may or may not help you:
+
+        $BSD = -f '/vmunix';
+        if ($BSD) {
+            system "stty cbreak </dev/tty >/dev/tty 2>&1";
+        }
+        else {
+            system "stty", 'cbreak',
+            system "stty", 'eol', '^A'; # note: real control A
+        }
+
+        $key = getc(STDIN);
+
+        if ($BSD) {
+            system "stty -cbreak </dev/tty >/dev/tty 2>&1";
+        }
+        else {
+            system "stty", 'icanon';
+            system "stty", 'eol', '^@'; # ascii null
+        }
+        print "\n";
+
+    You could also handle the stty operations yourself for speed if you're
+    going to be doing a lot of them.  This code works to toggle cbreak
+    and echo modes on a BSD system:
+
+    sub set_cbreak { # &set_cbreak(1) or &set_cbreak(0)
+        local($on) = $_[0];
+        local($sgttyb,@ary);
+        require 'sys/ioctl.pl';
+        $sgttyb_t   = 'C4 S' unless $sgttyb_t;
+        ioctl(STDIN,$TIOCGETP,$sgttyb) || die "Can't ioctl TIOCGETP: $!";
+
+        @ary = unpack($sgttyb_t,$sgttyb);
+        if ($on) {
+            $ary[4] |= $CBREAK;
+            $ary[4] &= ~$ECHO;
+        } else {
+            $ary[4] &= ~$CBREAK;
+            $ary[4] |= $ECHO;
+        }
+        $sgttyb = pack($sgttyb_t,@ary);
+
+        ioctl(STDIN,&TIOCSETP,$sgttyb) || die "Can't ioctl TIOCSETP: $!";
+    }
+
+    Note that this is one of the few times you actually want to use the
+    getc() function; it's in general way too expensive to call for normal
+    I/O.  Normally, you just use the <FILE> syntax, or perhaps the read()
+    or sysread() functions.
+
+
+Now, from the UNIX FAQ:
+
+6)  How do I read characters from the terminal in a shell script?
+
+    In sh, use read.  It is most common to use a loop like
+
+            while read line
+            do
+                    ...
+            done
+
+    In csh, use $< like this:
+        
+            while ( 1 )
+                set line = "$<"
+                if ( "$line" == "" ) break
+                ...
+            end
+
+    Unfortunately csh has no way of distinguishing between
+    a blank line and an end-of-file.
+
+    If you're using sh and want to read a *single* character from
+    the terminal, you can try something like
+
+            echo -n "Enter a character: "
+            stty cbreak         # or  stty raw
+            readchar=`dd if=/dev/tty bs=1 count=1 2>/dev/null`
+            stty -cbreak
+
+            echo "Thank you for typing a $readchar ."
+
+7)  How do I check to see if there are characters to be read without
+    actually reading?
+
+    Certain versions of UNIX provide ways to check whether
+    characters are currently available to be read from a file
+    descriptor.  In BSD, you can use select(2).  You can also use
+    the FIONREAD ioctl (see tty(4)), which returns the number of
+    characters waiting to be read, but only works on terminals,
+    pipes and sockets.  In System V Release 3, you can use poll(2),
+    but that only works on streams.  In Xenix - and therefore
+    Unix SysV r3.2 and later - the rdchk() system call reports
+    whether a read() call on a given file descriptor will block.
+
+    There is no way to check whether characters are available to be
+    read from a FILE pointer.  (You could poke around inside stdio data
+    structures to see if the input buffer is nonempty, but that wouldn't
+    work since you'd have no way of knowing what will happen the next
+    time you try to fill the buffer.)
+
+    Sometimes people ask this question with the intention of writing
+            if (characters available from fd)
+                    read(fd, buf, sizeof buf);
+    in order to get the effect of a nonblocking read.  This is not the
+    best way to do this, because it is possible that characters will
+    be available when you test for availability, but will no longer
+    be available when you call read.  Instead, set the O_NDELAY flag
+    (which is also called FNDELAY under BSD) using the F_SETFL option
+    of fcntl(2).  Older systems (Version 7, 4.1 BSD) don't have O_NDELAY;
+    on these systems the closest you can get to a nonblocking read is
+    to use alarm(2) to time out the read.
+
+
+Does that mean you can't do it?  Of course not: those just showed 
+you various ways to do it in various systems.  Here's what I use
+in plum.  Note that I here assume the following things:
+
+1) $SYSTEM has the "flavor" of UNIX you're running loaded into it.
+
+2) You've already required the appropriate files for your system
+   (sgtty.ph, sys/ioctl.ph, sys/termio.ph, termios.ph, sys/ttycom.ph, 
+   and/or sys/ttydev.ph) or otherwise gotten their values loaded.
+   
+3) That these .ph files are properly constructed using both h2ph and
+   c2ph, and that any files that they themselves require have received
+   similar treatements, recursively.  Note that it's important to 
+   use c2ph struct definitions if you ever hope to run on more
+   than one kind of system without having to modify your code.
+
+4) If your system is a POSIX one, you've loaded $GETIOCTL and 
+   $SETIOCTL with values that map into ioctls that retrieve
+   a termios struct for you.
+
+If all these hold true, these functions may work for you in a reasonably
+system-independent fashion. You should call the &init_cbreak function
+before calling &cbreak or &cooked, or take a &panic.
+
+--tom
+
+    sub set_cbreak { &panic("How did I get called?"); } 
+
+    sub cbreak { &set_cbreak(1); }
+    sub cooked { &set_cbreak(0); }
+
+    sub init_cbreak {
+	undef &set_cbreak;
+	if      ($SYSTEM =~ /^BSD/i) {
+	    *set_cbreak = *BSD_cbreak;
+	} elsif ($SYSTEM =~ /^SysV/i) {
+	    *set_cbreak = *SYSV_cbreak;
+	} elsif ($SYSTEM =~ /POSIX/i) {
+	    *set_cbreak = *POSIX_cbreak;
+	} else {
+	    *set_cbreak = *DUMB_cbreak;
+	} 
+    } 
+
+
+
+    sub BSD_cbreak {
+	local($on) = shift;
+	local(@sb);
+	local($sgttyb);
+	# global $sbttyb_t 
+
+	$sgttyb_t = &sgttyb'typedef() unless defined $sgttyb_t;
+
+	# native BSD stuff by author (tsc)
+
+	ioctl(TTY,&TIOCGETP,$sgttyb)
+	    || die "Can't ioctl TIOCGETP: $!";
+
+	@sb = unpack($sgttyb_t,$sgttyb);
+	if ($on) {
+	    $sb[&sgttyb'sg_flags] |= &CBREAK;
+	    $sb[&sgttyb'sg_flags] &= ~&ECHO;
+	} else {
+	    $sb[&sgttyb'sg_flags] &= ~&CBREAK;
+	    $sb[&sgttyb'sg_flags] |= &ECHO;
+	}
+	$sgttyb = pack($sgttyb_t,@sb);
+	ioctl(TTY,&TIOCSETN,$sgttyb)
+		|| die "Can't ioctl TIOCSETN: $!";
+    }
+
+    sub SYSV_cbreak {
+	# SysV code contributed by Jeff Okamoto <okamoto@hpcc25.corp.hp.com>
+
+	local($on) = shift;
+	local($termio,@termio);
+	# global termio_t ???
+
+	$termio_t = &termio'typedef() unless defined $termio_t;
+
+	ioctl(TTY,&TCGETA,$termio)
+	   || die "Can't ioctl TCGETA: $!";
+
+	@termio = unpack($termio_t, $termio);
+	if ($on) {
+	    $termio[&termio'c_lflag] &= ~(&ECHO | &ICANON);
+	    $termio[&termio'c_cc + &VMIN] = 1;
+	    $termio[&termio'c_cc + &VTIME] = 1;
+	} else {
+	    $termio[&termio'c_lflag] |= (&ECHO | &ICANON);
+
+	    # In HP-UX, it appears that turning ECHO and ICANON back on is
+	    # sufficient to re-enable cooked mode.  Therefore I'm not bothering
+	    # to reset VMIN and VTIME (VEOF and VEOL above).  This might be a
+	    # problem on other SysV variants.
+
+	}
+	$termio = pack($termio_t, @termio);
+	ioctl(TTY, &TCSETA, $termio)
+	    || die "Can't ioctl TCSETA: $!";
+	
+    }
+
+    # This is a hack because we don't have tc[gs]etattr.  Instead
+    # we must ASSUME that there's an ioctl or 2 that these map to.  
+    #
+    sub POSIX_cbreak {
+	local($on) = shift;
+	local(@termios, $termios, $bitmask);
+
+	# "file statics" for package cbreak:
+	#	   $savebits, $save_vtime, $save_vmin, $is_on
+
+	$termios_t = &termios'typedef() unless defined $termios_t;
+	$termios = pack($termios_t, ());  # for Sun SysVr4, which dies w/o this
+
+	ioctl(TTY,&$GETIOCTL,$termios)
+	    || die "Can't ioctl GETIOCTL ($GETIOCTL): $!";
+
+	@termios = unpack($termios_t,$termios);
+
+	$bitmask  = &ICANON | &IEXTEN | &ECHO;
+	if ($on && $cbreak'ison == 0) {
+	    $cbreak'ison = 1;
+	    $cbreak'savebits = $termios[&termios'c_lflag] & $bitmask;
+	    $termios[&termios'c_lflag] &= ~$bitmask;
+	    $cbreak'save_vtime = $termios[&termios'c_cc + &VTIME];
+	    $termios[&termios'c_cc + &VTIME] = 0;
+	    $cbreak'save_vmin  = $termios[&termios'c_cc + &VMIN];
+	    $termios[&termios'c_cc + &VMIN] = 1;
+	} elsif ( !$on && $cbreak'ison == 1 ) {
+	    $cbreak'ison = 0;
+	    $termios[&termios'c_lflag] |= $cbreak'savebits;
+	    $termios[&termios'c_cc + &VTIME] = $cbreak'save_vtime;
+	    $termios[&termios'c_cc + &VMIN]  = $cbreak'save_vmin;
+	} else {
+	    return 1;
+	} 
+	$termios = pack($termios_t,@termios);
+	ioctl(TTY,&$SETIOCTL,$termios)
+	    || die "Can't ioctl SETIOCTL ($SETIOCTL): $!";
+    }
+
+    # if you're too dumb to be one of the above three, maybe
+    # your stty doens't even grok cbreak.  pity.
+    sub DUMB_cbreak {
+	local($on) = shift;
+
+	if ($on) {
+	    system("stty  cbreak -echo");
+	} else {
+	    system("stty -cbreak  echo");
+	}
+    } 
+
+    1;

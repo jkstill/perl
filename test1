@@ -1,0 +1,12 @@
+#!/home/oracle/perl/bin/perl
+   require "edit.pl";
+
+   @user_text = ('This is a test','of the editor module.');
+   &Edit( *user_text );
+
+   print "Your text now:\n";
+	foreach $Line ( @user_text ) {
+		print $Line, "\n";
+	}
+
+

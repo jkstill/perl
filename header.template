@@ -1,0 +1,10 @@
+#!/usr/local/bin/perl
+
+# make sure perl can find my perl library files
+BEGIN
+{
+	$MACHINE=`uname -n`;
+	chop $MACHINE;
+	unshift(@INC,"/usr1$MACHINE/jared/perl/");
+}
+

@@ -1,0 +1,35 @@
+#!/home/oracle/perl -w
+use strict;
+my @path = split /:/, $ENV{PATH};
+my %path_inodes;
+my @clean_path;
+for (@path) {
+	next unless m#^/#;
+	my ($dev,$ino) = stat;
+	next unless defined $dev;
+	my $key = "$dev $ino";
+	if (exists $path_inodes{$key}) {
+		print "warning: $_ is linked to $path_inodes{$key}\n";
+		next;
+	}
+	$path_inodes{$key} = $_;
+	push @clean_path, $_;
+}
+my %progs;
+## print "clean path is @clean_path\n";
+for my $dir (@clean_path) {
+	use DirHandle;
+	my @files =
+	sort grep !/^\.\.?$/,
+	DirHandle->new($dir)->read;
+	## print "$dir: @files\n";
+	for my $file (@files) {
+		if (exists $progs{$file}) {
+			print "$file in $dir is shadowed by $progs{$file}\n";
+			next;
+		}
+	$progs{$file} = $dir;
+	}
+}
+
+

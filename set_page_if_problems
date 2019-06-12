@@ -1,0 +1,177 @@
+#!/home/oracle/perl/bin/perl
+
+use FileHandle;
+use File::Basename;
+use DBI qw(:sql_types);
+use OraEnv;
+use strict;
+no strict 'vars';
+
+use Getopt::Long;
+
+my %optctl = ();
+
+Getopt::Long::GetOptions( \%optctl, 
+	"database:s",
+	"username:s",
+	"instance:s",
+	"password:s",
+	"page!" => \$paging,
+	"z","h","help");
+
+#for my $key ( keys %optctl ) {
+	#print "$key: $optctl{$key}\n";
+#}
+
+my ( $programName, $path ) = fileparse( $0 );
+my $mode;
+if ( $programName =~ /set_page_if_problems/ ) { $mode = 'SET' }
+else { $mode = 'GET' }
+
+if ( $optctl{z} || $optctl{help} || $optctl{h} ) {
+	Usage(); exit 0;
+}
+
+#setup environment - homegrown package
+
+my($instance, $database, $username, $password);
+
+if ( $mode eq 'SET' ) {
+
+	if ( ! defined($optctl{instance}) ) {
+		Usage(); die "instance required\n";
+	}
+
+	if ( ! defined($paging) ) {
+		Usage(); die "page or nopage required\n";
+	}
+
+}
+
+if ( defined( $optctl{instance} ) ) { $instance = $optctl{instance} }
+
+if ( ! defined($optctl{username}) ) {
+	Usage(); die "username required\n";
+}
+$username=$optctl{username};
+
+
+if ( ! defined($optctl{database}) ) {
+	Usage(); die "database required\n";
+}
+$database=$optctl{database};
+
+OraEnv::SetEnv($database);
+
+if ( ! defined $optctl{password} ) {
+	$password = OraEnv::GetPassWord($database,$username);
+} else {
+	$password = $optctl{password};
+}
+
+if ( ! defined $password ) {
+	Usage(); die "password not specified or not found in password files\n";
+}
+
+#print "USERNAME: $username\n";
+#print "DATABASE: $database\n";
+#print "PASSWORD: $password\n";
+#exit;
+
+
+my $dbh = DBI->connect('dbi:Oracle:' . $database, $username, $password, { RaiseError => 1, AutoCommit => 0 } );
+
+die "Connect to  $database failed \n" unless $dbh;
+
+my ( $sql, $rv, $sth );
+
+if ( $mode eq 'SET' ) {
+
+	setInfo();
+	getInfo();
+
+} else { # mode eq 'GET'
+
+	getInfo();
+
+}
+
+$sth->finish;
+$dbh->disconnect;
+
+#print "$sql\n";
+exit;
+
+sub Usage {
+	my $purpose = ( $mode eq 'GET' ) ? 'set paging on or off for an instance' : 'get paging status';
+	print qq{	
+
+	purpose:  $purpose
+	};
+
+	if ( $mode eq 'SET' ) {
+
+		print qq{	
+	usage:  
+		$programName --database dv07 --username scott --instance pr64 --password tiger [ --page | --nopage ]
+
+		--database repository database 
+		--username username to logon to repository
+		--password password for username - not required if password is in password files
+		--instance instance to turn paging on/off for
+		--page     turn paging on
+		--nopage   turn paging off
+
+		};
+	} else { # $mode eq= 'GET' 
+
+		print qq{	
+	usage:  
+		$programName --database dv07 --username scott --instance pr64 --password tiger 
+
+		--database repository database 
+		--username username to logon to repository
+		--password password for username - not required if password is in password files
+		--instance instance to check paging status of
+
+		};
+	}
+
+}
+
+
+sub getInfo {
+
+	$sql="select instance_name, page_if_problems 
+		from common.instances";
+
+	if ( defined( $instance ) ) { 
+		$sql .= q{  where instance_name = lower(?) };
+		$sth = $dbh->prepare($sql);
+		$sth->bind_param( 1, $instance, SQL_VARCHAR );
+	} else { 
+		$sql .= " order by instance_name";
+		$sth = $dbh->prepare($sql) 
+	}
+
+	$rv = $sth->execute;
+
+	while( $ary = $sth->fetchrow_arrayref ) {
+		printf( "%10s  %s\n", $ary->[0], $ary->[1]);
+	}
+}
+
+sub setInfo {
+
+	$sql="update common.instances set page_if_problems =  ?" ;
+	$sql .= " where instance_name = ?";
+
+	$sth = $dbh->prepare($sql);
+	$sth->bind_param( 1, $paging ? 'Y' : 'N', SQL_VARCHAR );
+	$sth->bind_param( 2, $instance, SQL_VARCHAR );
+
+	$rv = $sth->execute;
+	$dbh->commit;
+
+}
+

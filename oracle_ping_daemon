@@ -1,0 +1,85 @@
+#!/home/oracle/perl/bin/perl
+
+# oracle_ping_daemon
+
+use lib "/home/jkstill/perl";
+
+use FileHandle;
+use DBI;
+use Carp;
+use OraEnv;
+use strict;
+use email;
+use Daemon;
+no strict 'vars';
+
+use Getopt::Long;
+
+my $sleepSeconds=300;
+$sleepSeconds=20;
+
+my @instances=();
+my @dbaMailList=();
+
+OraEnv::GetInstanceList(\@instances);
+OraEnv::GetDbaMailList(\@dbaMailList);
+
+#@instances=('dv01','dv02');
+#print join(" - ", @instances ), "\n";
+
+#Daemon::daemon();
+
+while (1) {
+
+	my($db, $username, $password);
+
+	foreach my $instance ( @instances ) {
+
+		$username = 'system';
+
+		$db=$instance;
+		OraEnv::SetEnv($db);
+		$password = OraEnv::GetPassWord($db,$username);
+
+		print "USERNAME: $username\n";
+		print "DATABASE: $db\n";
+		print "PASSWORD: $password\n";
+
+		#print "Connecting to $db\n";
+		# uncomment to simulate a failure
+		#$password='hoseer';
+
+		# try to connect twice if necessary. I sometimes 
+		# see 'null password' errors even though I know it to be correct
+		eval {
+			my $dbh = DBI->connect('dbi:Oracle:' . $db, $username, $password, { RaiseError => 0, AutoCommit=>0, PrintError=>0 } );
+			die $DBI::errstr unless $dbh;
+			$dbh->disconnect;
+		};
+
+		if ( $@ ) { 
+			#print "Died connecting to $db\n";
+			sleep 1;
+			eval {
+				$password = OraEnv::GetPassWord($db,$username);
+				my $dbh = DBI->connect('dbi:Oracle:' . $db, $username, $password, { RaiseError => 0, AutoCommit=>0, PrintError=>0 } );
+				$dbh->disconnect;
+			};
+			if ( $@ ) {
+				#email::SendMail(\@dbaMailList, "Oracle Ping Daemon: Unable to connect to $db\n$DBI::errstr\n", "$db Database Down - Oracle Ping Daemon" );
+				email::SendMail(\@dbaMailList, "Oracle Ping Daemon: Unable to connect to $db\n$DBI::errstr\n", "$db Database Down - Oracle Ping Daemon" );
+				warn "Error encountered connect to $db\n";
+				warn "Message: $DBI::errstr\n";
+			}
+		}
+
+	}
+
+
+	sleep $sleepSeconds;
+
+}
+
+
+
+

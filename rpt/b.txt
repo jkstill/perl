@@ -1,0 +1,48 @@
+@_: $VAR1 = [
+          'HASHREF',
+          {},
+          'STH',
+          undef,
+          'COLUMNS',
+          {
+            'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+            'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+            'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+          },
+          'BREAKS',
+          [
+            'OWNER',
+            'TABLE_NAME'
+          ],
+          'PAGESIZE',
+          60,
+          'LINESIZE',
+          100
+        ];
+
+$hr: $VAR1 = {
+          'STH' => undef,
+          'BREAKS' => [
+                        'OWNER',
+                        'TABLE_NAME'
+                      ],
+          'HASHREF' => {},
+          'PAGESIZE' => 60,
+          'COLUMNS' => {
+                         'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                         'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                         'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                       },
+          'LINESIZE' => 100
+        };
+
+REF: HASH
+TIEHASH!
+Breaks: $VAR1 = [
+          'OWNER',
+          'TABLE_NAME'
+        ];
+
+
+NOT TIED 2
+

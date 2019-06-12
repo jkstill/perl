@@ -1,0 +1,203 @@
+#!/home/oracle/perl/bin/perl
+
+# dskspc
+# reports on space used by all databases found
+
+use warnings;
+use FileHandle;
+use DBI;
+use OraAuth;
+use strict;
+
+use Getopt::Long;
+
+our %optctl = ();
+
+Getopt::Long::GetOptions(
+	\%optctl, 
+	"sysdba!",
+	"sysoper!",
+	"skip!",
+	"verbose!",
+	"z","h","help");
+
+#setup environment - homegrown package
+
+if ( $optctl{z} or $optctl{h} or $optctl{help} ) {
+	Usage();
+	exit 1;	
+}
+
+our( $username, $connectionMode);
+
+$connectionMode = 0;
+if ( $optctl{sysoper} ) { $connectionMode = 4 }
+if ( $optctl{sysdba} ) { $connectionMode = 2 }
+
+our $verbose = $optctl{verbose} ? 1 : 0;
+
+my @dataSource = DBI->data_sources('Oracle');
+
+$username = 'system';
+
+use Data::Dumper;
+
+our %fileSpace = ();
+
+our @dbSkip = ( 'vdrp', 'sapdata','sapdev','sapqa','dal3' );
+
+for my $dataSource ( @dataSource ){
+
+	my (undef, undef, $db ) = split(/:/,lc($dataSource));
+	if ( $optctl{skip} ) {
+		next if grep(/^$db$/,@dbSkip);
+	}
+
+	# temp for testing
+	#next unless grep(/^$db$/,qw{vdrprod gtrn agiledev});
+
+	print "working on: $db\n";
+
+	my $password = $OraAuth::userAuth{$db}->{$username};
+
+	my $dbh = DBI->connect(
+		'dbi:Oracle:' . $db, 
+		$username, $password, 
+		{ 
+			RaiseError => 1, 
+			AutoCommit => 0,
+			ora_session_mode => $connectionMode
+		} 
+	);
+
+	die "Connect to  $db failed \n" unless $dbh;
+
+	my $sql="select global_name from global_name";
+
+	my $sth = $dbh->prepare($sql);
+
+	my $rv = $sth->execute || die "error with statement $sql \n";
+
+	my $globalName = ($sth->fetchrow_array)[0];
+	print "\tGlobal Name: $globalName\n";
+
+	$sql = q(
+		select 
+			tablespace_name
+			, file_name
+			, bytes
+		from dba_data_files
+		union
+		select
+			'REDOLOG' tablespace_name
+			, member file_name
+			, bytes
+		from v$log l, v$logfile f
+		where l.group# = f.group#
+		order by 1,2,3
+	);
+
+	$sth = $dbh->prepare($sql);
+	$rv = $sth->execute || die "error with statement $sql \n";
+
+	print "Fetching:\n" if $verbose;
+	while ( my $aryref = $sth->fetchrow_arrayref ) {
+		my @ary=@{$aryref};
+		push(@{$fileSpace{$db . ':' . $globalName}}, \@ary );
+		if ( $verbose ) {
+			print "\tTBS  : $ary[0]\n";
+			print "\tFILE : $ary[1]\n";
+			print "\tBYTES: ", commify($ary[2]), "\n";
+		}
+	}
+	print "\n" if $verbose;
+
+	$sth->finish;
+	$dbh->disconnect;
+
+}
+
+#print Dumper(%fileSpace);
+
+my ($totalFileCount, $totalFileBytes) = (0,0);
+
+our %dbSpace=();
+our %tbsSpace=();
+
+for my $db ( keys %fileSpace ) {
+	print "Summing: $db\n" if $verbose;
+	my($tablespaceName, $fileName, $bytes );
+	for my $tbs ( @{$fileSpace{$db}} ) {
+		($tablespaceName, $fileName, $bytes ) = @{$tbs};
+		$totalFileCount++;
+		$totalFileBytes += $bytes;
+		$dbSpace{$db} += $bytes;
+		$tbsSpace{$db}{$tablespaceName} += $bytes;
+	}
+}
+
+if ( $verbose ) {
+	for my $db ( sort keys %dbSpace ) {
+		print "\tDB: $db\n";
+		for my $tbs ( sort keys %{$tbsSpace{$db}} ) {
+			print "\t\tTBS: $tbs: $tbsSpace{$db}{$tbs}\n";
+		}
+		print "\t\tDB BYTES:  $db:  $dbSpace{$db}\n";
+	}
+}
+
+print "\n\n";
+
+my $megabytes = commify(round($totalFileBytes / 2**20, 2));
+
+print "\nSpace Used per database:\n";
+
+for my $db ( sort keys %dbSpace ) {
+	my $space = commify(round($dbSpace{$db},2));
+	printf("db: %-30s  %20s\n", $db, $space );
+}
+
+print "\n";
+
+
+print qq{
+
+Total File Count: $totalFileCount
+Total Megabytes : $megabytes
+
+};
+
+
+sub Usage {
+	print q{
+
+usage:  dskspc [-skip] [-verbose]
+
+Get total space used by databases found 
+in tnsnames.ora.  Uses DBI->data_sources
+
+   -skip    skips SAP and CIM databases
+
+   -verbose prints a lot of stuff you probably don't care about
+
+
+};
+}
+
+
+sub round {
+
+   my($roundval, $dp) = @_;
+   my($period) = chr(46);
+   my($decpoint, $tmpval);
+
+   $roundval = sprintf("%.${dp}f",$roundval);
+
+}
+
+sub commify {
+   local $_  = shift;
+   1 while s/^(-?\d+)(\d{3})/$1,$2/;
+   return $_;
+}
+

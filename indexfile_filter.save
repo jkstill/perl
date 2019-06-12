@@ -1,0 +1,83 @@
+#!/usr/bin/perl
+
+
+=pod
+
+	indexfile_filter
+
+	create usable SQL from 'imp indexfile=myfile.sql'
+
+	e.g. indexfile_filter < myfile.sql > newfile.sql
+
+=cut
+
+my $ddl = undef;
+
+while(<>) {
+
+	chomp;
+	# don't remove quotes!
+	# they are your friend for odd object names
+	#s/\"//g;			# remove quotes
+	s/^REM\s+//;	# uncomment
+
+	next if /^\s*$/; # blank line
+	next if /^CONNECT/;
+
+	# process current sql if defined and new command starting
+
+	if ( /^CREATE|ALTER/ ) {
+		if ( $ddl ) {
+			sqlFormat(\$ddl);
+			print "$ddl\n\n";
+			$ddl = '';
+		}
+	}
+
+	$ddl .= $_;
+}
+
+sqlFormat(\$ddl);
+print "$ddl\n";
+
+sub sqlFormat {
+
+	my ($sqlRef) = @_;
+
+	# 
+	
+	my $parsed = ${$sqlRef};
+
+	if ( ${$sqlRef} =~ /^CREATE\sTABLE/ ) {
+		$parsed =~ s/
+			^([\w\s\d\"\.\$]+)	# match to first paren
+			(\(.+\){1}?)			# get column definitions
+			(.+)						# the junk in the middle
+			(\([\w\s\d\$\"]+\))	# last set of parens
+			(.*)$						# to the end of the line
+			/undef/x;				# can replace with junk
+										# as we have parsed text
+
+		my @sqlParts = ( $1, $2, $3, $4, $5 );
+
+		#$sqlParts[0] = ${$sqlRef};
+		for $i ( 0 .. $#sqlParts ) {
+			if ( $sqlParts[$i] =~ /,/ ) {
+				# newline after opening paren
+				$sqlParts[$i] =~ s/^(.*)(\()(\")(.+)$/$1$2\n   $3$4/;
+				# newline before comma following closing paren
+				$sqlParts[$i] =~ s/\),/\)\n   ,/g;
+				# newline before comma following data type e.g. DATE
+				$sqlParts[$i] =~ s/(\w),/$1\n   ,/g;
+				# newline after closing paren
+				$sqlParts[$i] =~ s/\)$/\n\)/;
+			}
+		}
+
+		${$sqlRef} = join("\n",@sqlParts);
+			
+	}
+
+}
+
+

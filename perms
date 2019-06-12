@@ -1,0 +1,15 @@
+#!/home/oracle/perl -w
+
+
+opendir(DIR,'.') || die "cannot open current dir - $!\n";
+
+@files = readdir(DIR);
+closedir DIR;
+
+foreach $filename  ( @files ) {
+
+	#($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,$blksize,$blocks) = stat($filename);
+	my($perms) = (stat ($filename ))[2] & 07777;
+
+	printf "FILENAME: %s  perms:  %o \n", $filename, $perms;
+}

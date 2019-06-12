@@ -1,0 +1,127 @@
+#!/home/oracle/perl -w
+
+use strict;
+no strict 'vars';
+
+if ( $#ARGV < 0 ) { usage() }
+
+$ddl_file  = $ARGV[0];
+$ctl_file  = $ARGV[1];
+
+#print "DDL: $ddl_file\n";
+#print "CTL: $ctl_file\n";
+
+
+$initial_default='16k';
+$next_default='16k';
+
+@storage=();
+%storage=();
+
+if ( defined($ctl_file )) {
+
+	open(CTL,"$ctl_file") || die "cannot open control file $ctl_file - $!\n";
+
+	while (<CTL>) {
+		chomp;
+		@storage=split(/:/);
+		#print "STORAGE: ", join(' - ', @storage), "\n";
+		$object=shift(@storage);
+		$object=uc($object);
+		$storage{$object} = [ @storage ];
+	
+		#print "$object:  $storage{$object}[0] - $storage{$object}[1] \n";
+		#print "          $storage[0] - $storage[1] \n";
+	}
+
+} else { 
+
+	warn "No Control file used\n";
+	warn "All INITIAL extents will be $initial_default\n";
+	warn "All NEXT extents will be $next_default\n";
+
+}
+
+open(DDL,"$ddl_file") || die "cannot open $ddl_file - $! \n ";
+
+
+while (<DDL> ) {
+
+	chomp;
+
+	#s/^\s*(.*)/$1/;
+
+	# current_object must be set to something
+	# this will not be in the file
+	$current_object='UNUSABLE_GIBBERISH';
+	if ( /^\s*CREATE TABLE|^\s*CREATE INDEX|^\s*ALTER TABLE/i ) {
+		($dummy, $dummy, $current_object) = split;
+		$current_object =~ s/\(//g;
+		$current_object = uc($current_object); 
+		#print "$current_object\n";
+	}
+
+	if ( /$current_object/i ) {
+		if ( defined( $storage{$current_object} )) {
+			$initial_extent = $storage{$current_object}[0];
+			$next_extent = $storage{$current_object}[1];
+		} else {
+			$initial_extent = $initial_default;
+			$next_extent = $next_default;
+		}
+	}		
+
+	# change INITIAL and NEXT - new method matches more file formats
+	s/^(.*)(INITIAL)\s+?([0-9]+[K|M]{0,1})\s*(.*)$/$1 $2 $initial_extent $4/i;
+	s/^(.*)(NEXT)\s+?([0-9]+[K|M]{0,1})\s*(.*)$/$1 $2 $next_extent $4/i;
+
+
+	# change INITIAL and NEXT - Old method - not very flexible
+	#if ( / NEXT /i ) {
+
+		##print "ORG: $_\n";
+		#@storage_parms = split;
+		##print "STR: ", join(' ',@storage_parms), "\n";
+		#$storage_parms[1] = $next_extent;
+
+		##print "ARY: ", join(' ',@storage_parms), "\n";
+
+		#$_ = join(' ',@storage_parms);
+		
+		# new
+		# ( initial 100M next 100M pctincrease 0 minextents 1 maxextents 1017 )
+	#}
+
+	#if ( / INITIAL /i ) {
+		#@storage_parms = split;
+		#$storage_parms[1] = $initial_extent;
+		#$_ = join(' ',@storage_parms);
+	#}
+
+	print "$_\n";
+
+
+}
+
+
+sub usage {
+	warn "\n\n";
+	warn "chgddlext - change ddl extent sizes\n\n";
+	warn "usage: chgddlext ddl_file  control_file\n\n" ;
+	warn "ddl_file: the SQL DDL script\n\n";
+	warn "control_file: optional\n";
+	warn "   if specified, it contains the new storage parameters\n";
+	warn "   for each object in the format OBJECT:PARM:PARM\n";
+	warn "   e.g.  MY_TABLE:100k:20k\n";
+	warn "   if the object is not in the file, the defaults of\n";
+	warn "   INITIAL 16K and NEXT 8K will be used.\n";
+	warn "   \n";
+	warn "   If the control file is not specified, all objects will\n";
+	warn "   use the default values\n";
+	warn "   \n";
+	warn "This program writes to stdout, so you must redirect\n";
+	warn "the output to save it.\n\n";
+	warn "   \n";
+	exit 1;
+}
+

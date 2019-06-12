@@ -1,0 +1,164 @@
+#!/home/oracle/perl 
+
+
+# oprocsize
+# determine process sizes via pmap and ps
+# calls procsize for the ps part
+# MUST be run while logged into OS as oracle
+
+use FileHandle;
+use DBI;
+use Carp;
+use OraEnv;
+use strict;
+no strict 'vars';
+
+use Getopt::Long;
+
+%optctl = ();
+
+GetOptions(\%optctl,
+	"instance=s",
+	"username=s",
+	"help",
+	"debug!"
+);
+
+
+my $megaByte = 2**20;
+# get the list of PQ server pids
+
+my($db, $username, $password) = ($optctl{instance},$optctl{username},'');
+OraEnv::SetEnv($db);
+$password = OraEnv::GetPassWord($db,$username);
+
+$dbh = DBI->connect('dbi:Oracle:' . $db, $username, $password, { RaiseError => 1, AutoCommit => 0 } );
+
+croak "Connect to  $db failed \n" unless $dbh;
+
+
+my $MySql= q{ select d.spid os_pid
+from 
+     v$session b,
+     v$process d
+where
+	b.paddr = d.addr
+	and  b.username is not null
+	-- don't include the current session
+	and not userenv('SESSIONID') = b.audsid
+};
+
+
+$sth = $dbh->prepare($MySql);
+
+my $rv = $sth->execute || croak "error with statement $MySql \n";
+
+my @pqPids=();
+while( $ary = $sth->fetchrow_arrayref ) {
+	push(@pqPids,$${ary[0]});
+}
+
+$sth->finish;
+$dbh->disconnect;
+
+if ( $#pqPids < 0 ) {
+	die "Sorry - no one seems to be logged on\n";
+}
+
+#print "PIDS: ", join(' - ',@pqPids), "\n";
+
+my $PMAP = '/usr/proc/bin/pmap';
+
+my %vmem;
+
+for my $pid ( @pqPids ) {
+
+	# skip sessions that may have just terminated
+	next unless -d "/proc/${pid}";
+
+	open (PMAP, "$PMAP $pid |") || die "cannot start $PMAP for $pid - $! \n";
+	my ($sharedMem, $totalMem ) = (0,0);
+	while (<PMAP>) {
+		s/^\s*//;
+		#print;
+		if ( /^total/ ) {
+			$totalMem = (split(/\s+/))[1];
+			# remove trailing 'K'
+			chop $totalMem;
+		}
+		if ( /shmid=/ ) {
+			$sharedMem = (split(/\s+/))[1];
+			# remove trailing 'K'
+			chop $sharedMem;
+		}
+	}
+
+	$vmem{$pid} = [$totalMem * 1024, $sharedMem * 1024, ( $totalMem - $sharedMem ) * 1024];
+}
+
+my $pidCount = $#pqPids + 1;
+
+my $PROCSIZE = "procsize -user oracle -noheader";
+
+open(PS, "$PROCSIZE |" ) || die "cannot open $PROCSIZE - $! \n";
+
+my %rmem;
+while(<PS>) {
+	s/^\s+//;
+	my( $pid, $dummy, $dummy, $actualMeg, @command ) = split(/\s+/);
+	$rmem{$pid} = [$actualMeg, join(' ',@command ) ];
+}
+
+
+my %tmem;
+
+
+for my $pid ( keys %vmem ) {
+
+	$tmem{$pid} = [ 
+		fnum($vmem{$pid}[0] / $megaByte,7),	# total memory
+		fnum($vmem{$pid}[1] / $megaByte, 7), 			# shared memory
+		fnum($vmem{$pid}[2] / $megaByte, 7), 			# virtual memory
+		fnum($rmem{$pid}[0], 7),							# real memory
+		$rmem{$pid}[1] 										# command
+	];
+}
+
+my ( $avgTotal, $avgShared, $avgReal );
+
+my ( $avgVirtual, $avgReal ) = (0,0);
+
+my $fsize = 9;
+my $FORMAT = "%10s  %${fsize}s  %${fsize}s  %${fsize}s  %${fsize}s  %s\n";
+my $HDR_FORMAT = "%10s  %-${fsize}s  %-${fsize}s  %-${fsize}s  %-${fsize}s  %-s\n";
+
+printf($HDR_FORMAT, 'PID','TOTAL','SHARED','VIRT','REAL','COMMAND');
+printf($HDR_FORMAT, '','MEG','MEG','MEG','MEG','');
+
+for my $pid ( keys %tmem ) {
+	printf($FORMAT,$pid, join(' ',@{$tmem{$pid}}) );
+	$avgVirtual += $tmem{$pid}[2];
+	$avgReal += $tmem{$pid}[3];
+}
+
+print "\n";
+print "Total Virtual Memory Usage = $avgVirtual MEG\n";
+print "Total Real Memory Usage    = $avgReal MEG\n";
+
+$avgVirtual = fnum( $avgVirtual / $pidCount,7); 
+$avgReal = fnum( $avgReal / $pidCount,7); 
+
+print "\n";
+print "Average Virtual Memory Usage = $avgVirtual MEG\n";
+print "Average Real Memory Usage    = $avgReal MEG\n";
+
+sub fnum {
+	my($string, $length, $padchar) = @_;
+	$string = sprintf("%5.2f",$string);
+	$padchar = ' ' unless $padchar;
+	my $padstr = $padchar x 80;
+	return substr($padstr,0,$length - length($string)) . $string;
+}
+
+
+

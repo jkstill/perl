@@ -1,0 +1,9 @@
+#!/home/oracle/perl -pi.baq 
+
+	if ( index($0,'upper') >= $[ ) {
+		$_ =~ tr/a-z/A-Z/;
+	}
+	if ( index($0,'lower') >= $[ ) {
+		$_ =~ tr/A-Z/a-z/;
+	}
+

@@ -1,0 +1,111 @@
+#!/home/oracle/perl/bin/perl
+
+# check_common_instances
+# compare DBA repository of instances to 
+# file /opt/share/oracle/sql/instance.list
+
+use FileHandle;
+use DBI;
+use Carp;
+use OraEnv;
+use strict;
+no strict 'vars';
+
+use Getopt::Long;
+
+my($result) = Getopt::Long::GetOptions("database:s","username:s","z","h","help");
+
+# GetOpt returns a zero on error
+#if ( ( ! $result ) || ($opt_help or $opt_z or $opt_h ) ) { &main::Usage;exit }
+
+# tell -w to shut up
+use vars qw/ $opt_z $opt_help $opt_h /;
+
+#setup environment - homegrown package
+
+my($db, $username, $password);
+
+if ( ! defined($opt_database) ) {
+	Usage();
+	die "database required\n";
+}
+
+$db=$opt_database;
+OraEnv::SetEnv($db);
+if ( ! defined($opt_username) ) {
+	Usage();
+	die "username required\n";
+}
+
+$username=$opt_username;
+$password = OraEnv::GetPassWord($db,$username);
+
+# flush buffers so output appears in file immediately
+STDOUT->autoflush(1);
+
+$instance_file='/opt/share/oracle/sql/instance.list';
+
+my %instanceList=();
+open(INSTANCES,$instance_file) || die "cannot open $instance_file - $! \n";
+
+while (<INSTANCES>){
+	chomp;
+	my @instance=split /:/ ;
+	$instanceList{$instance[0]} = $instance[2];
+}
+
+#for $key ( keys %instanceList ) {
+	#print "instance: $key   server: $instanceList{$key}\n";
+#}
+#print "\n\n";
+
+$dbh = DBI->connect('dbi:Oracle:' . $db, $username, $password, { RaiseError => 1 } );
+
+croak "Connect to  $db failed \n" unless $dbh;
+
+$MySql="select instance_name, server_name from instances order by instance_name";
+
+$sth = $dbh->prepare($MySql);
+
+$rv = $sth->execute || croak "error with statement $MySql \n";
+
+my %commonInstances=();
+
+while( $ary = $sth->fetchrow_arrayref ) {
+	my ( $instance, $server) = @$ary;
+	#print "$instance - $server\n";
+	$commonInstances{$instance} = $server;
+}
+
+$sth->finish;
+$dbh->disconnect;
+
+print "\n\n";
+print "Instances/Servers found in $db.$username  but not in $instance_file\n\n";
+
+for $key ( keys %commonInstances ) {
+	if ( ! defined( $instanceList{$key} ) ) {
+		print "$key - $commonInstances{$key}\n";
+	}
+}
+print "\n\n";
+
+print "Instances/Servers found in $instance_file but not in $db.$username\n\n";
+
+for $key ( keys %instanceList ) {
+	if ( ! defined( $commonInstances{$key} ) ) {
+		print "$key - $instanceList{$key}\n";
+	}
+}
+
+print "\n\n";
+
+sub Usage {
+	print "\n";
+	print "usage:  check_common_instances -database [dbname] -username [username]\n";
+	print "    e.g. check_common_instances -database rp01 -username common\n";
+	print "\n";
+}
+
+
+

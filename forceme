@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+
+$TIOCSTI = 0x80017472;
+@chars = split(//,"@ARGV\r");
+for (@chars) {
+    ioctl(STDIN,$TIOCSTI,$_);
+}

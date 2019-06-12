@@ -1,0 +1,88 @@
+#!/home/oracle/perl/bin/perl
+
+use Getopt::Long;
+use Date::Manip;
+
+my($result) = Getopt::Long::GetOptions( "instance=s" );
+
+die "log switch analyzer - use '-instance' switch to specify an instance name" unless $opt_instance;
+
+$logFile = "/obase/admin/${opt_instance}/bdump/alert_${opt_instance}.log";
+
+open( LOG,$logFile ) || die " unable to open logfile $logFile - $!\n";
+
+my $lookForDate=0;
+my ($newDate, $oldDate);
+my $deltaStr = undef;
+my $printDate = undef;
+
+my $debug = 0;
+
+while(<LOG>) {
+	
+	chomp;
+	
+	/Thread.*advanced/ &&do { $lookForDate = 1 };
+
+	if ( $lookForDate ) {
+
+		my $date = Date::Manip::ParseDate($_);
+		$printDate = $_;
+
+		if ( $date ) {
+
+			if ( defined( $newDate )) { $oldDate = $newDate };
+			$newDate = $date;
+
+			#print; 
+
+			if ( defined( $newDate ) && defined( $oldDate ) ) { 
+
+				my $err;
+				my $dateDelta = Date::Manip::DateCalc($oldDate,$newDate,\$err,1);
+				my $weekDeltaStr = Date::Manip::Delta_Format($dateDelta,0,"%wv");
+				my $dayDeltaStr = Date::Manip::Delta_Format($dateDelta,0,"%dv");
+				my $hourDeltaStr = Date::Manip::Delta_Format($dateDelta,0,"%hv");
+				my $minuteDeltaStr = Date::Manip::Delta_Format($dateDelta,0,"%mv");
+				my $secondDeltaStr = Date::Manip::Delta_Format($dateDelta,0,"%sv");
+				$deltaStr =  
+					substr('00' . $weekDeltaStr,-2,2) . ':' . 
+					substr('00' . $dayDeltaStr,-2,2) . ':' . 
+					substr('00' . $hourDeltaStr,-2,2) . ':' . 
+					substr('00' . $minuteDeltaStr,-2,2) . ':' . 
+					substr('00' . $secondDeltaStr,-2,2) ;
+				#if ( $dateDelta ) { print " - $dateDelta" }
+				#if ( $deltaStr ) { print " - $deltaStr" }
+				write;
+			}
+			#print "\n";
+
+			if ( $debug ) {
+				print STDERR "\tOLD DATE: $oldDate\n";
+				print STDERR "\tNEW DATE: $newDate\n";
+			}
+
+			$lookForDate = 0;
+		}
+	}
+
+}
+
+format top =
+
+     Log Switch Frequency for @<<<<<<<
+                        $opt_instance
+
+
+                          Elapsed Time
+Logswitch                 WW:DD:HH:MM:SS
+------------------------  --------------
+.
+
+format STDOUT =
+@<<<<<<<<<<<<<<<<<<<<<<<  @<<<<<<<<<<<<<<
+$printDate,$deltaStr
+.
+
+
+

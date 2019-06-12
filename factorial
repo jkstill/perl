@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+
+print factorial([1..200000000]), "\n";
+
+
+sub factorial {
+	$refArray2Factor = shift;
+
+	clear();
+	#print "REF: ", ref($refArray2Factor),"\n";
+	my $factored=0;
+	my $arrayMax = @$refArray2Factor;
+
+	for ( my $i=0; $i<$arrayMax; $i++ ) {
+		$factored = _factorial(${$refArray2Factor}[$i]);
+		#print "ARRAY: ", ${$refArray2Factor}[$i], "\n";
+	}
+
+	return $factored;
+}
+
+{
+
+my $factorial;
+
+sub _factorial {
+
+	my $factor = shift;
+	$factorial = 1 unless defined $factorial;
+	$factorial *= $factor;
+	#print "FACTOR   : $factor\n";
+	#print "FACTORIAL: $factorial\n";
+
+	return $factorial;
+	
+}
+
+sub clear { undef $factorial }
+
+}
+

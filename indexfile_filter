@@ -1,0 +1,49 @@
+#!/home/oracle/perl/bin/perl
+
+
+=pod
+
+	indexfile_filter
+
+	create usable SQL from 'imp indexfile=myfile.sql'
+
+	e.g. indexfile_filter < myfile.sql > newfile.sql
+
+	see 'fixddl' for formatting extremely long CREATE
+	statements.  some CREATE statements can reach the
+	line limit length for SQL*Plus
+
+=cut
+
+my $statement ='';
+
+while(<>) {
+
+	# skip row count lines
+	# REM  ... 0 rows
+	/REM\s+...\s+[0-9]+\s+rows/ && do { next };
+
+	chomp;
+	# don't remove the quotes.  Some colum names may
+	# reqire quotes
+	#s/\"//g;			# remove quotes
+	s/^REM\s+//;	# uncomment
+
+	# get past CONNECT statement
+	/^\s*$/ && do { next };
+	/^CONNECT/ && do { next };
+
+	$statement .= $_;
+	/;$/ && do { 
+		$statement =~ s/\s+TABLESPACE\s+/\nTABLESPACE /goi;
+		$statement =~ s/\s+PCTFREE\s+/\nPCTFREE /goi;
+		$statement =~ s/\s+STORAGE\s*\(/\nSTORAGE( /goi;
+		$statement =~ s/, \"/\n\t, \"/go;
+		print "$statement\n\n";;
+		$statement = '';
+	};
+
+}
+
+
+

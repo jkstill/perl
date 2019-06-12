@@ -1,0 +1,21 @@
+#!/home/oracle/perl/bin/perl -w
+
+
+my $EarthOrbitRadiusMiles	= 97 * 10**6;
+my $EarthRadiusMiles		= 3963.5;
+my $PI						= 3.141593;
+my $EarthProfileAreaMiles	= $PI * ( $EarthRadiusMiles**2 );
+my $EarthOrbitAreaMiles	= 4 * $PI * ( $EarthOrbitRadiusMiles**2 );
+
+#  square inches of face / sqare mile
+
+my $FaceSquareMiles = ( 2 * ($PI*6)) / ((5280*12)*(5280*12)) ;
+
+my $EarthPctSunlight = $EarthProfileAreaMiles / $EarthOrbitAreaMiles * 100;
+
+printf("Percent of Sunlight that reaches earth - %2.12f\n", $EarthPctSunlight );
+
+my $FacePctSunlight = $FaceSquareMiles / $EarthOrbitAreaMiles * 100;
+
+printf("Percent of Sunlight that hits your face at noon on a summer day - %2.25f\n", $FacePctSunlight );
+

@@ -1,0 +1,44 @@
+#!/home/oracle/perl/bin/perl
+
+
+check_oratclsh();
+
+sub check_oratclsh {
+    # check for the SUID/SGID bits on ORACLE_HOME/bin/oratclsh
+    # if set, this allows a user to fork a root shell! 
+    # Get the octal portion of perms that indicates  
+    # SUID and SGID, and warn if either is set
+ 
+    my $tclfile = "$ENV{ORACLE_HOME}/bin/oratclsh"; 
+    return unless -e $tclfile;    
+ 
+    my ($mode,$uid,$gid) = (stat($tclfile))[2,4,5];  
+	 my @owners;
+	 push @owners, ( scalar getpwuid($uid), scalar getgrgid($gid) );
+	 my $owners = join ":", @owners;
+
+    my @bits; 
+    push @bits, "SUID" if $mode & 04000 and $mode & 00111; 
+    push @bits, "SGID" if $mode & 02000 and $mode & 00111; 
+    return unless @bits; 
+    my $bits = join " and ", @bits; 
+ 
+    warn qq{ 
+    WARNING - YOUR ORACLE INSTALLATION HAS A SECURITY PROBLEM. 
+    An Oracle component, probably "Intelligent Agent", has installed 
+    a copy of oratclsh that is $bits.
+    This file is owned by $owners.
+    This warning and the problem it refers to are not related to
+    the DBI or DBD::Oracle modules in any way.  This security check
+    has been done for your information. Please contact your DBA or
+    Oracle about the problem. Please do NOT contact myself or dbi-users.
+};
+    sleep 10;
+}
+
+
+__END__
+
+Also I'd be grateful if you could add code to get the uid and gid
+and convert them to names so the message can be made more complete.
+

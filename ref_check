@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+print rchk([qw{this is a test}]), "\n";;
+
+# fails
+#print rchk(qw{this is a test}), "\n";;
+
+print rchk({ w1 => 'this', w2 => 'is', w3 => 'a', w4 => 'test' }), "\n";
+
+# fails
+#print rchk( w1 => 'this', w2 => 'is', w3 => 'a', w4 => 'test' ), "\n";
+
+print rchk([]), "\n";;
+print rchk({}), "\n";
+
+
+sub rchk {
+	my ( $ref ) = @_;
+	$ref ||= [];
+
+	my $refType = ref $ref;
+
+	if ( 'ARRAY' eq $refType ) {
+		return $refType;
+	} elsif ( 'HASH' eq $refType ) {
+		return $refType;
+	} else { die "invalid ref type of $refType used to call rchk\n" }
+
+}

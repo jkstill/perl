@@ -1,0 +1,25 @@
+sub usage {
+	my $exitVal = shift;
+	use File::Basename;
+	my $basename = basename($0);
+	print qq/
+
+usage: $basename
+
+  -machine       target database server
+  -database      target instance
+  -username      target instance dba account
+  -password      target instance dba password (optional)
+  -sysdba        logon as sysdba
+  -sysoper       logon as sysoper
+
+  passwords are optional only if the PWD password server is in use
+
+  example:
+
+  $basename -machine all -database dv07 -username scott -password tiger [-sysdba || -sysoper]
+/;
+   exit $exitVal;
+};
+
+

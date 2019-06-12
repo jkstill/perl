@@ -1,0 +1,18 @@
+#!/home/oracle/perl/bin/perl
+
+# a very simple daemon
+
+$ppid=$$;
+unless ( fork ) {
+	$pid = $$;
+
+	if( $pid == $ppid ) {exit;}
+
+	while (1) {
+
+		sleep(10);
+
+	}
+}
+
+

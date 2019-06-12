@@ -1,0 +1,87 @@
+#!/usr/local/bin/perl
+
+# make sure perl can find my perl library files
+$MACHINE=`uname -n`;
+chop $MACHINE;
+push(@INC,"/usr1$MACHINE/jared/perl/");
+
+require "trim.pl";
+
+-f "cddz.lis" || die "cannot open sizing report cddz.lis \n";
+
+$cmd = "/usr/local/bin/ggrep -Ei \"^Table Name|^Index Name|^Unique|^Datapages.*final|^Indexpages.*final|Summary Detail\" cddz.lis|";
+
+#open(Z,$cmd);
+open(Z,"cddz.lis");
+
+$TableType=0;
+$IndexType=0;
+$TableName = $IndexName = '';
+$ExtentSize = 0;
+$BlockSize = 8192;
+$ExtentSize = 0;
+$NumRows = 0;
+
+$a = $b = $c = $d = $e = $f = '';
+
+while(<Z>) 
+{
+
+	chop;
+	#print "VARS: $a $b $c $d $e $f\n";
+	( $a, $b, $c, $d, $e, $f ) = split(/:/);
+
+
+	if ( grep( /^Table Name/, $a ) )  
+		{ 
+			$TableType = 1; 
+			$IndexType = 0; 
+			$TableName = &AllTrim($b);
+			print "\nTable: $TableName\n";
+			$a='';
+		}
+
+	if ( grep ( /^Index Name/, $a ) )  
+		{ 
+			$TableType = 0; 
+			$IndexType = 1; 
+			$IndexName = &AllTrim($b);
+			print "\nIndex: $IndexName\n";
+			if ( $IndexName eq "N" ){ 
+				print "ERROR!\n";
+				print "$a $b $c $d $e $f\n";
+				#exit 1;
+			}
+			$a='';
+		}
+
+	if ( $TableType )
+	{
+
+		if ( grep( /^Datapages initial/,$a ) ) 
+		{
+			print "\tExtent Size: ", ($c * $BlockSize)/1024, "k\n";
+			$TableType = 0;
+		}
+
+		# get num of rows
+		if ( grep(/Finish/,$b) ) { $NumRows = $c }
+
+	}
+
+	if ( $IndexType ) 
+	{
+		if ( grep(/^  Y/, $a ) || grep(/^  N/,$a) )
+		{ 
+			($dummy,$dummy,$RowsPerPage) = split;
+			#print "\nNUM ROWS -  $NumRows\n";
+			#print "\nROWS PER PAGE -  $RowsPerPage\n";
+			print "\tExtent Size: ", (int( $NumRows / $RowsPerPage ) * $BlockSize)/1024,"k\n";
+			$IndexType = 0;
+		}
+
+	}
+
+}
+
+

@@ -1,0 +1,61 @@
+#!/home/oracle/perl/bin/perl -w
+
+
+use Getopt::Long;
+
+my %opt;
+my $result = Getopt::Long::GetOptions(\%opt,
+	"acres_per_person!",
+	"people_per_square_mile!",
+	"people=s",
+	"help"
+);
+
+if ( ! $opt{people} ) {
+	help();
+	exit 1;
+}
+
+my $PeopleOnEarth = ( eval $opt{people}  ) ;
+
+#print "People: $PeopleOnEarth\n\n";
+#exit;
+
+if ( ! $opt{acres_per_person} and ! $opt{people_per_square_mile} ) {
+	help();
+	exit 1;
+}
+
+my $EarthRadiusMiles		= 3963.5;
+my $PI						= 3.141593;
+my $DryLandPercent		= 29.2;
+my $EarthAreaMiles		= 4 * $PI * ( $EarthRadiusMiles * $EarthRadiusMiles );
+my $DryLandAreaMiles		= $EarthAreaMiles * ( $DryLandPercent / 100 );
+my $AcresPerSquareMile	= 640;
+
+print "Area: $DryLandAreaMiles\n\n";
+
+if ( $opt{people_per_square_mile} ) {
+	my $PeoplePerSquareMile = sprintf( "%8.3f", $PeopleOnEarth / $DryLandAreaMiles );
+	print "\nWith $PeopleOnEarth people, the Earth would have $PeoplePerSquareMile people per square mile\n\n";
+}
+
+if ( $opt{acres_per_person} ) {
+	# get number of acres, divide  people into it
+	my $AcresPerPerson = sprintf( "%8.2f", ( $DryLandAreaMiles * $AcresPerSquareMile ) / $PeopleOnEarth);
+	print "\nWith $PeopleOnEarth people on the Earth, each person would have $AcresPerPerson acres\n\n";
+}
+
+sub help {
+	print <<EOF
+
+earth_area -<people> -[acres_per_person | people_per_square_mile]
+
+Given a number of people, determine how many 
+people there are per square mile, or how
+many acres per person.
+
+EOF
+
+}
+

@@ -1,0 +1,113 @@
+#!/opt/local/bin/perl
+#
+# Description:
+#	This script merges multiple Netscape bookmark files, eliminating
+#	duplicates, and sorting by title.  The merged output bookmark is
+#	sent to the standard output.  Duplicate title/URL's are resolved by 
+#	selecting the highest LAST_VISIT number.  It is assumed that the titles 
+#	within a folder are unique.  Nested folders are supported.
+#
+# Usage: merge.pl bookmark1.htm bookmark2.htm ... > bookmark.htm
+#
+# Problems:
+#   The sorting needs to be case-insensitive.  You can resort the bookmarks
+#	with Netscape 2.X.
+#
+# Notes:
+#	This script has been tested with NTPerl 5.001 and Netscape 2.01.
+#
+# Author:
+#	Ross Cutler, rgc@cs.umd.edu, http://www.cs.umd.edu/~rgc
+#
+# History:
+#	4-1-96 -- first version
+#
+# Algorithm:
+#   flatten folders to the associative array %bookmarks
+#     indices are of the form folder1||folder2||...||URL-title
+#     elements are of the form LAST_VISIT,URL | beginfolder | endfolder
+#   the bookmarks array is unflattened (dumped to a new bookmarks file) in
+#	  sorted order.
+
+$num_duplicates = 0;
+$num_urls = 0;
+
+# print first 8 lines of the first bookmark file
+for ($i = 0; $i < 8; $i++) {
+	$_ = <>;
+	print $_;
+}
+
+# read in bookmarks
+while (<>) {
+	if (/<DT><H3 .*">(.*)<\/H3>/) {
+		$folder_name = $1;
+		push(@folder, $folder_name);
+		$bookmarks{join('||', @folder)} = 'beginfolder';
+	} elsif (/<\/DL><p>/) {
+		if ($#folder >= 0) {
+			$i = join('||', @folder) . '||~~~';
+		} else {
+			$i = '~~~';
+		}
+		$bookmarks{$i} = 'endfolder';
+		pop(@folder);
+	} elsif (/<DT><A HREF="(.*)" ADD_DATE="(.*)" LAST_VISIT="(.*)" LAST_MODIFIED="(.*)">(.*)<\/A>/) {
+		$url = $1;
+		$last_visit = $3;
+		$title = $5;
+		if ($#folder >= 0) {
+			$i = join('||', @folder) . '||' . $title;
+		} else {
+			$i = $title;
+		}
+		$e = $last_visit . "," . $url;
+		if (defined($bookmarks{$i})) {
+			print STDERR "DUPLICATE: ", $title, "\n";
+			$num_duplicates++;
+			$existing_last_visit = $bookmarks{$i} =~ /(.*)/;
+			$existing_last_visit = $1;
+			if ($j < $last_visit) {
+				$bookmarks{$i} = $e;
+			}
+		} else {
+			$num_urls++;
+			$bookmarks{$i} = $e;
+		}
+	}
+}
+
+# dump %bookmarks
+
+foreach $key (sort(keys %bookmarks)) {
+	print "*" . $key . " -- " . $bookmarks{$key} . "\n";
+
+	@folders = split(/\|\|/, $key);
+	if ($bookmarks{$key} eq "beginfolder") {
+		$folder_name = pop(@folders);
+		&indent($#folders + 1);
+		print '<DT><H3 FOLDED ADD_DATE="0">' . $folder_name . '</H3>' . "\n";
+		&indent($#folders + 1);
+		print '<DL><p>' . "\n";
+	} elsif ($bookmarks{$key} eq "endfolder") {
+		&indent($#folders - 1);
+		print '</DL><p>' . "\n";
+	} else {
+		&indent($#folders);
+		$title = pop(@folders);
+		($last_visit,$url) = split(',', $bookmarks{$key});
+		print '<DT><A HREF="' . $url . '" ADD_DATE="0" LAST_VISIT="' . $last_visit . '" LAST_MODIFIED="0">' . $title . '</A>' . "\n";
+	}
+}
+
+print STDERR "\nNumber of URL's = ", $num_urls, "\n";
+print STDERR "\nNumber of duplicates = ", $num_duplicates, "\n";
+
+sub indent {
+	local($level) = @_;
+	local($j);
+	for ($j = 0; $j <= $level; $j++) {
+		print "    ";
+	}
+}
+

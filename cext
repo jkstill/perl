@@ -1,0 +1,76 @@
+#!/home/oracle/perl  -w 
+
+# cext
+# change extent definitions in oracle export files
+# 
+# works best on files that only contain DDL data
+
+use Getopt::Long;
+
+my %options=();
+GetOptions(\%options, "input=s", "output=s", "debug");
+
+if ( ( ! defined($options{input} ) ) or ( ! defined($options{output}) ) ) {
+	die "$0 needs both an input and output file"
+}
+
+open (INPUT, $options{input} ) || die "cannot open input file $options{input} - $! \n";
+open (OUTPUT, ">$options{output}" ) || die "cannot open output file $options{output} - $! \n";
+
+$k128 = 128 * 1024;
+$m4 = 4 * 1024**2;
+$m128 = 128 * 1024**2;
+
+my $DEBUG = 0;
+$DEBUG = 1 if $options{debug};
+
+while(<INPUT>) {
+
+	if ( ! /^.*(INITIAL)\s+([0-9]+).*$/ ) { print OUTPUT; next }
+
+	chomp;
+
+	print "Oldline: $_\n\n" if $DEBUG;
+
+	s/
+		^(.*)			#1 prefix
+		(INITIAL)	#2 initial
+		(\s+)			#3 space
+		([0-9]+)		#4 initsize
+		(.*)			#5 middle
+		(NEXT)		#6 next
+		(\s+)			#7 space
+		([0-9]+)		#8 nextsize
+		(.*)			#9 suffix
+	$/$1$2$3$4$5$6$7$8$9/x;
+
+	my ( $prefix, $initial, $initsize, $middle, $next, $nextsize, $suffix ) = ( $1, $2, $4, $5, $6, $8, $9 );
+
+	# change the initial and next sizes to conform to 128k,
+	# 4m and 128m extent sizes
+
+	#modify later to change tablespaces as well
+
+	if ( $initsize >= $m128 ) { $initsize = $m128; $nextsize = $m128 }
+	elsif ( $initsize >= $m4 ) { $initsize = $m4; $nextsize = $m4 }
+	elsif ( $initsize >= $k128 ) { $initsize = $k128; $nextsize = $k128 }
+	elsif ( $initsize < $k128 ) { $initsize = $k128; $nextsize = $k128 }
+	else {
+		warn "!!Error!!\n";
+		warn "Initial: $initsize\n";
+		warn "Next   : $nextsize\n";
+		warn "$prefix $initial $initsize $initsize $middle $next $nextsize $suffix \n";
+		die "Invalid or Unknown storage size \n"
+	}
+
+	# changes maxextents to 1024
+	
+	my $newline = "$prefix $initial $initsize $middle $next $nextsize $suffix\n";
+	$newline =~ s/^(.*)(MAXEXTENTS)(\s+)([0-9]+)(.*)$/$1$2 1024 $5/;
+	print "Newline:  $newline\n" if $DEBUG;
+	
+	print OUTPUT "$newline\n";
+
+}
+
+

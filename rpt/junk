@@ -1,0 +1,3 @@
+   my ($pkg, $rval, $name) = @_;
+   my $obj = [$name, $$rval];
+   bless $obj, $pkg;

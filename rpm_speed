@@ -1,0 +1,150 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+#use Data::Dumper;
+ 
+%optctl = ();
+GetOptions(\%optctl,
+	"tire_width=i",
+	"aspect_ratio=i",
+	"differential=f",
+	"wheel_size=i",
+	"redline=i",
+	"gearset=s",
+	"help!",
+);
+
+usage(0) if $optctl{help};
+
+$redline = $optctl{redline} ? $optctl{redline} : 8000;
+$wheelSize= $optctl{wheel_size} ? $optctl{wheel_size} : 16;
+$tireAR= $optctl{aspect_ratio} ? $optctl{aspect_ratio} / 100 : .50;
+$tireWidth= $optctl{tire_width} ? $optctl{tire_width} : 225;
+$differential = $optctl{differential} ? $optctl{differential} : 4.09;
+$gearset =  $optctl{gearset} ? $optctl{gearset} : 'rx7';
+
+
+# determine max RPM to display
+$rpmSegSize = 1000;
+$maxRPM = $redline + ($rpmSegSize -1);
+$maxRPM = $maxRPM - ( $maxRPM % $rpmSegSize);
+$rpmCols = $maxRPM / $rpmSegSize;
+
+$inchesPerMile=5280*12;
+
+$pi=3.14159;
+$minutesPerHour=60;
+
+$mmPerInch = 1/0.0394;
+
+# RX7 - 3rd Gen, American Transmission
+%rx7gears=(
+	'1st' => 3.48,
+	'2nd' => 2.02,
+	'3rd' => 1.39,
+	'4th' => 1.0,
+	'5th' => .719
+);
+
+# RX8 - S2 transmission
+%rx8S2gears=(
+	'1st' => 3.815,
+	'2nd' => 2.26,
+	'3rd' => 1.64,
+	'4th' => 1.177,
+	'5th' => 1, 
+	'6th' => .832
+);
+
+if ($gearset eq 'rx7'){%gears=%rx7gears}
+elsif ($gearset eq 'rx8') {%gears=%rx8S2gears}
+else {
+	die 'invalid gear set specified with -gearset';
+}
+
+@rpm=();
+for (my $r=1;$r<=$rpmCols;$r++) { push @rpm,$r * $rpmSegSize }
+
+# revolutions per mile =  inches per mile / ( diameter * pi );
+# diameter = wheel width + ( tire width * aspect ratio * 2)
+$revolutionsPerMile = $inchesPerMile / ( ( $wheelSize + ( ( $tireWidth * $tireAR *2) / $mmPerInch ) ) * $pi );
+
+$rollingLength = ( $wheelSize + ( ( $tireWidth * $tireAR *2) / $mmPerInch ) ) * $pi;
+$tireHeight = ( $wheelSize + ( ( $tireWidth * $tireAR *2) / $mmPerInch ) ) ;
+
+print qq/
+
+Differential        : $differential
+Wheel Size          : $wheelSize inches
+Tire Width          : $tireWidth millimeters
+Tire Height         : $tireHeight inches
+Aspect Ratio        : $tireAR
+Revolutions per mile: $revolutionsPerMile
+Rolling Length      : $rollingLength
+Redline             : $redline
+
+/;
+
+print "  RPM ";
+foreach  $rpm ( @rpm ) { print"$rpm\t"}
+print "\n";
+
+# build the printf format string based on number of columns to print
+@formatRPM = qq{%4.2f\t} x $rpmCols;
+
+foreach $gear ( sort keys %gears ) {
+	print "$gear:  ";
+	my @speeds = ();
+	foreach $rpm ( @rpm ) {
+		push @speeds, ( ( $rpm / $gears{$gear} / $differential ) * $rollingLength * $minutesPerHour ) / $inchesPerMile;
+	}
+	printf("@formatRPM\n" , @speeds);
+	
+}
+
+@speeds=(30,40,50,60,70,80);
+
+print "\n\t", join("\t",@speeds), "\n";
+
+foreach $gear ( sort keys %gears ) {
+	print "$gear:  ";
+	foreach $speed ( @speeds ) {
+		my $rpm = ( ( ( $inchesPerMile * $speed ) / $rollingLength) * $differential * $gears{$gear})/$minutesPerHour;
+		if ($rpm<=$redline) {
+			printf "%5d\t", $rpm;
+		} else {printf"%5s\t", '-----'}
+	}
+	print "\n";
+	
+}
+
+
+sub usage {
+
+	my $exitVal = shift;
+	use File::Basename;
+	my $basename = basename($0);
+	print qq{
+$basename
+
+usage: $basename - determine speed in each gear based on RPM
+
+   $basename -aspect_ratio
+
+-aspect_ratio : used to determine sidewall height
+                this would the 45 in 245/45/16
+                defaults to 50
+-differential : final drive ratio - defaults to 4.09
+-redline      : obvious - defaults to 8000
+-tire_width   : width in millimeters - defaults to 225
+-wheel_size   : size of wheel in inches - defaults to 16
+-gearset      : rx7 (FD) or rx8 (S2)
+
+examples here:
+
+   $basename -aspect_ratio 45 -differential 4.09 -redline 8000
+};
+
+	exit $exitVal ? $exitVal : 0;
+}
+

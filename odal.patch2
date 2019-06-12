@@ -1,0 +1,27 @@
+*** /home/oracle/perl/bin/odal.pl	Thu Apr 15 10:00:23 2004
+--- odal.pl	Thu Apr 15 10:39:01 2004
+***************
+*** 127,137 ****
+  
+  		$profile = $row->{PROFILE};
+  		$defUsername = $row->{USERNAME};
+  
+  		#printf("%-30s %-12s %-15s %-20s\n",$username, $passwordType, $profile, $lockDate);
+! 		if ($optctl{csv}) {print qq{$optctl{database},$defUsername,$passwordType,$profile,$lockDate\n}}
+  		else{write}
+  
+  	}
+  }
+  
+--- 127,137 ----
+  
+  		$profile = $row->{PROFILE};
+  		$defUsername = $row->{USERNAME};
+  
+  		#printf("%-30s %-12s %-15s %-20s\n",$username, $passwordType, $profile, $lockDate);
+! 		if ($optctl{csv}) {print qq{$machine->[0],$optctl{database},$defUsername,$passwordType,$profile,$lockDate\n}}
+  		else{write}
+  
+  	}
+  }
+  

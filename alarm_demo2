@@ -1,0 +1,26 @@
+#!/home/oracle/perl/bin/perl
+
+use warnings;
+use strict;
+
+$|=1; # do not buffer output
+
+my $action=\&continueProgram;
+
+{
+	$SIG{ALRM}=sub{ print "Performing Alarm Action\n"; $action = \&exitProgram;  return 0;};
+	alarm(2);
+	print "sleeping..."; 
+	sleep(3);
+	&$action;
+	print "Exiting normally\n";
+
+}
+
+
+sub exitProgram {
+	print "\nexiting via exitProgram\n";
+	exit;
+}
+
+sub continueProgram { print "\ncontinuing via continueProgram\n" }

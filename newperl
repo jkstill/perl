@@ -1,0 +1,6 @@
+#!/home/oracle/perl -wpi
+
+s@^#!/opt/share/oracle/bin/perl@#!/pkgs/local/bin/perl@;
+s@^#!/opt/local/bin/perl@#!/pkgs/local/bin/perl@;
+
+

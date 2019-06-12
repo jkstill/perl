@@ -1,0 +1,72 @@
+#!/usr/bin/perl  
+
+# format_quoted_email
+# see comments at end
+
+use Text::Wrap qw( fill wrap $columns );
+
+# width of printed paragraphs
+$columns = 60;
+
+# qc = 'quote character'
+# change if necessary
+my $qc = '>';
+
+my @pg=();
+my $line;
+my $text;
+
+
+$|++;
+
+while (<>) {
+
+	chomp;
+	$text = $_;
+
+	# blank lines
+	$text =~ s/^($qc\s)+$qc$//;
+
+	# text
+	$text =~ s/^($qc+\s*)+(.+)$/$2/;
+
+
+	# if blank then
+	# push line onto page
+	# start a new line
+	if ( $text =~ /^$/ ) {
+		#warn "pushing line\n";
+		push(@pg, $line);
+		push(@pg, "\n\n");
+		$line = '';	
+	} else {
+		# strip spaces at end and add just one
+		$text =~ s/\s+$//;
+		$text .= ' ';
+	}
+
+	$line .= $text;
+}
+
+
+print wrap('  ', '  ', @pg);
+
+
+__END__
+
+so often a multi forwarded email is full of embedded 'quotes' that
+it's very difficult to read.
+
+e.g.
+
+> > this is a an example of an email that has been forwarded
+> >
+> to
+> > many people and is nearly impossible
+> > to read.
+> >
+> > this utility will combine all lines separated by blank 
+> > lines
+> > and then print the collected lines as paragraphs
+> >
+

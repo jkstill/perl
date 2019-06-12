@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+
+$mem = $ARGV[0] eq '-m';
+
+open(PS,"ps auxc|");
+
+<PS>;
+
+while (<PS>) {
+    @fields = split;
+    $user = shift @fields;
+    $prog = pop @fields;
+    $incr = $mem ? $fields[3] : 1;
+    $users{$user} = $users{$user} + $incr . " $user";
+    $progs{$prog} = $progs{$prog} + $incr . " $prog";
+}
+
+@users = sort revnum values %users;
+for (@users) {
+    ($n,$p) = split;
+    push(@un,$n);
+    push(@up,$p);
+}
+@progs = sort revnum values %progs;
+for (@progs) {
+    ($n,$p) = split;
+    push(@pn,$n);
+    push(@pp,$p);
+}
+
+sub revnum { $b <=> $a; }
+
+write;
+
+format STDOUT =
+@>>>> @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   @>>> @<<<<<<<<<<<< ~~
+shift @pn, shift @pp, shift @un, shift @up
+.

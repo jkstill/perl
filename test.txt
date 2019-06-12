@@ -1,0 +1,5 @@
+
+this is a test
+this is a DOS file with CR/LF
+it will be stripped
+naked

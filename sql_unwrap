@@ -1,0 +1,38 @@
+#!/home/oracle/perl/bin/perl
+
+=head1 NAME 
+
+sql_unwrap 
+
+
+=head1  DESCRIPTION
+
+	'unwrap' SQL from indexfile option of imp
+
+=head1 USAGE
+
+sql_unwrap is a filter
+
+e.g. 
+
+  sql_unwrap < indexfile.sql > new.sql
+
+=cut
+
+my $sqlLine=0;
+
+while(<>) {
+
+	/^CREATE/ && do { $sqlLine = 1 };
+
+	next if ! $sqlLine;
+
+	chomp;
+
+	print;
+
+	/;$/ && do { print "\n"; $sqlLine = 0 };
+
+
+}
+

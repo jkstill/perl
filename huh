@@ -1,0 +1,8 @@
+#!/home/oracle/perl -w
+
+@OraVars = grep(/SQL|ORA|TNS/, keys %ENV );
+
+for $key ( sort @OraVars ) {
+	print "$key: $ENV{$key}\n";
+}
+

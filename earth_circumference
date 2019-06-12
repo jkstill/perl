@@ -1,0 +1,62 @@
+#!/usr/bin/perl -w
+
+
+use Getopt::Long;
+
+$result='';
+$result = Getopt::Long::GetOptions(
+	"raise=n",
+	"length=n",
+	"help"
+);
+
+if ( ( ! $opt_raise and ! $opt_length ) 
+	or
+	( $opt_raise and  $opt_length ) ) {
+	help();
+	exit 1;
+}
+
+my $EarthRadiusMiles		= 3963.5;
+my $EarthRadiusInches	= $EarthRadiusMiles * 5280 * 12;
+my $PI						= 3.141593;
+my $EarthCircumferenceMiles	= $PI * ( $EarthRadiusMiles * 2 );
+my $EarthCircumferenceInches	= $EarthCircumferenceMiles * 5280 * 12;
+
+printf "Earth Circumference: %6.2f miles\n\n",$EarthCircumferenceMiles;
+#exit;
+
+if ( $opt_raise ) {
+	my $NewEarthRadiusInches = $EarthRadiusInches + $opt_raise;
+	my $NewEarthCircumferenceInches = $PI * ( $NewEarthRadiusInches * 2 );
+	my $InchesAdded = $NewEarthCircumferenceInches - $EarthCircumferenceInches;
+	printf "\nRaising the string $opt_raise inches \nrequires %6.2f inches more string\n\n",  $InchesAdded;
+}
+
+if ( $opt_length ) {
+	my $NewEarthCircumferenceInches = $EarthCircumferenceInches + $opt_length;
+	my $NewEarthRadiusInches = ( $NewEarthCircumferenceInches / $PI )  / 2;
+	my $InchesRaised = $NewEarthRadiusInches - $EarthRadiusInches;
+	print "Raised: $InchesRaised\n";
+
+}
+
+sub help {
+	print <<EOF
+
+earth_circumference -raise <inches> -length <inches>
+
+Imagine a string wrapped around the earth at the equator.
+
+Determine the length of this string, and if the 'raise' 
+argument is given, determine in inches how much longer that
+string would need to be to raise it 'raise' inches around
+the equator.
+
+If the 'length' argument is given, determine how much the
+string would be raised by adding 'length' inches to it.
+
+EOF
+
+}
+

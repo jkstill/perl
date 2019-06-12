@@ -1,0 +1,71 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+ 
+%optctl = ();
+GetOptions(\%optctl,
+	"tire_width=i",
+	"aspect_ratio=i",
+	"wheel_size=i",
+	"help"
+);
+
+
+if (defined($optctl{help})) {
+	usage(2);
+}
+
+$wheelSize= $optctl{wheel_size} ? $optctl{wheel_size} : 16;
+$tireAR= $optctl{aspect_ratio} ? $optctl{aspect_ratio} / 100 : .50;
+$tireWidth= $optctl{tire_width} ? $optctl{tire_width} : 225;
+
+$inchesPerMile=5280*12;
+
+$pi=3.14159;
+
+$mmPerInch = 1/0.0394;
+
+# revolutions per mile =  inches per mile / ( diameter * pi );
+# diameter = wheel width + ( tire width * aspect ratio * 2)
+$revolutionsPerMile = $inchesPerMile / ( ( $wheelSize + ( ( $tireWidth * $tireAR *2) / $mmPerInch ) ) * $pi );
+
+# tire height in inches
+$tireHeight = $wheelSize + ( $tireWidth * $tireAR *2) * 0.0394;
+
+print qq/
+
+Wheel Size   : $wheelSize inches
+Tire Width   : $tireWidth millimeters
+Aspect Ratio : $tireAR
+Tire Heigth  : $tireHeight
+
+/;
+
+print "Revolutions per mile: $revolutionsPerMile\n";
+
+
+
+sub usage {
+
+	my $exitVal = shift;
+	use File::Basename;
+	my $basename = basename($0);
+	print qq{
+$basename
+
+usage: $basename - <SCRIPT DESCRIPTION>
+
+   $basename -option1 parameter1 -option2 parameter2 ...
+
+   -tire_width   - width of tire in mm
+   -aspect_ratio - the '40' part of 245/40/16
+   -wheel_size   - wheel diameter in inches
+
+examples here:
+
+   $basename -tire_width 265 -aspect_ratio 40 -wheel_size 17
+};
+
+	exit $exitVal ? $exitVal : 0;
+}
+

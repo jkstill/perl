@@ -1,0 +1,63 @@
+#!/home/oracle/perl -w
+
+# cico
+# check all regular files into RCS
+
+require "sys/stat.ph";
+
+$current_uid = $<; 
+die "Cannot get user id\n" unless $login_uid = (getpwnam(getlogin()))[2];
+
+$current_user = (getpwuid($current_uid))[0]; 
+$login_user = (getpwuid($login_uid))[0];
+
+if ( $current_uid != $login_uid ) {
+	print STDERR "Please login correctly!";
+	print STDERR "You have su'd to $current_user from $login_user\n";
+	print STDERR "Please login as $current_user\n";
+	die;
+} 
+
+$CI='/opt/local/bin/ci';
+$CO='/opt/local/bin/co';
+$automsg = 'automated RCS checkin by /home/jkstill/perl/cico' . chr(10) . '.' ;
+
+-x $CO || die "$CO is not available or executable\n";
+-x $CI || die "$CI is not available or executable\n";
+
+opendir(DIR,'.') || die "cannot open current dir - $!\n";
+
+@files = readdir(DIR);
+closedir DIR;
+
+mkdir 'RCS', 0750;
+
+foreach $filename  ( @files ) {
+
+	#($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,$blksize,$blocks) = stat($filename);
+	my($mode,$uid) = (stat ($filename ))[2,4] ;
+	($mode,$uid) = (lstat ($filename ))[2,4] unless $mode;
+
+	my($type) = $mode & S_IFMT();
+
+	next unless $type == S_IFREG();
+
+	printf "FILE: %s TYPE: %x MODE: %o  UIDS: %4d\n", $filename, uc($type), $mode, $uid;
+
+	system("echo '$automsg' | $CI $filename" );
+	$err = $?;
+
+	if ($err) {
+		system("mv -f $filename cico.tmp");
+		system("$CO -l $filename");
+		system("cp cico.tmp $filename");
+		system("echo '$automsg' | $CI $filename");
+
+	} 
+
+	system("$CO $filename" );
+	
+	unlink "cico.tmp";
+
+}
+

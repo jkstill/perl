@@ -1,0 +1,46 @@
+#!/home/oracle/perl -w
+
+my %byteSize = (
+	nybble => 2**2,
+	byte => 2**3,
+	kilobyte => 2**10,
+	megabyte => 2**20,
+	gigabyte => 2**30,
+	terabyte => 2**40,
+	petabyte => 2**50,
+	exabyte => 2**60,
+	zettabyte => 2**70,
+	yottabyte => 2**80
+);
+
+# sort by numeric size
+foreach $byteName ( sort { $byteSize{$a} <=> $byteSize{$b} } keys %byteSize) {
+	printf("%-15s: %s\n", $byteName, $byteSize{$byteName});
+}
+
+print "\n\n";
+
+
+print "Check how many petabytes Perl can keep track of...\n\n";
+
+@x=( 7.99, 8.00 );
+foreach $multiplier ( @x ) {
+
+	print "comparing ( $multiplier * $byteSize{petabyte} ) to ( $multiplier * $byteSize{petabyte} + 1 ) \n";
+
+	$x1 = $multiplier * $byteSize{petabyte} ;
+	$x2 = $multiplier * $byteSize{petabyte} +1;
+	
+	#$x1 = 1024**20;
+	#$x2 = 1024**20 +1;
+
+	print "x1: $x1\n";
+	print "x2: $x2\n";
+
+	if ( $x1 == $x2 ) { print "x1 and x2 are equal\n"}
+	else { print "x1 and x2 are NOT equal\n" }
+	print "\n\n";
+
+}
+
+

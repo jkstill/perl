@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+#  @(#) flatfile - read delimited records in file, write out without NL or CR
+
+# ex: flatfile myfile.tmp > newfile
+
+open (MYFILE,$ARGV[0]) || die "Could not open $ARGV[0]: $!\n";
+
+
+while (<MYFILE>) {
+
+	chop $_;
+	printf(STDOUT "%s",$_);
+	printf(STDERR "." );
+
+}

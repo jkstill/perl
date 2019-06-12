@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+while (<>) {
+	printf("%7.12f\n",eval $_);
+	if ($@) {
+		print qq{
+
+You seem to have encountered an error
+err: $@
+
+Use CTL-C to exit
+
+};
+	}
+
+}

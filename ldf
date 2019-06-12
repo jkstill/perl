@@ -1,0 +1,84 @@
+#!/home/oracle/perl  -w
+
+# ldf - shows df data for local drives only ( no : in them )
+#       then totals the numbers
+
+# jkstill - 01/11/2000 - option min_meg to show specify min free size
+
+use Config;
+use Getopt::Long;
+
+my %options=();
+Getopt::Long::GetOptions(\%options,"-min_meg=i");
+
+#print "OPT: $options{min_meg}\n";
+#exit;
+
+$FS=join(' ',@ARGV);
+#print "FS = $FS\n";
+
+if ( $Config{'osname'} eq 'linux' ) { $GREP='grep '}
+else { $GREP='/pkgs/gnu/bin/grep ' }
+
+$DF_CMD='df -k  ' . $FS . "|$GREP " . ' -vE "Filesystem|^/proc|^fd|^swap|^/tmp|:|cdrom"';
+#print "DF_CMD= $DF_CMD\n";
+
+open(DF,"$DF_CMD|") || die "cannot open $DF - $! \n";
+
+($total_kbytes,$total_used_kbytes,$total_avail_kbytes,$total_pctused)=(0,0,0,0);
+
+$filesystem='';
+while (<DF>) {
+
+	($filesystem,$kbytes,$used_kbytes,$avail_kbytes,$pctused,$mountpoint)=split;
+
+	#print "AVAIL: $avail_kbytes\n";
+	if ( $options{min_meg}  ){
+		next unless ( ( $avail_kbytes * 1024 ) >= ( $options{min_meg} * 2**20 ) );
+	}
+
+	$total_kbytes = $total_kbytes + $kbytes;
+	$total_used_kbytes = $total_used_kbytes + $used_kbytes;
+	$total_avail_kbytes = $total_avail_kbytes + $avail_kbytes;
+
+	write;
+}
+
+#print "TOTAL KBYTES: $total_kbytes\n";
+#print "TOTAL USED BYTES: $total_used_kbytes\n";
+
+$total_pctused = ( $total_used_kbytes / (($total_kbytes==0) ? 1: $total_kbytes) ) * 100;
+$total_pctused += 0.5;
+$total_pctused =~ s/^(\d+)\..*$/$1/;
+$total_pctused =~ s/^(.*)$/$1%/;
+
+$~ = 'SUMMARY';
+
+write;
+exit;
+
+format top=
+                                                                Pct
+Mounted on               kbytes             Used         Avail Full
+---------------         
+
+.
+
+format STDOUT=
+@<<<<<<<<<<<<<<  @>>>>>>>>>>>>>   @>>>>>>>>>>>>>    @>>>>>>>>>>>  @>>
+$mountpoint, commify($kbytes),  commify($used_kbytes), commify($avail_kbytes),   $pctused
+.
+
+
+format SUMMARY=
+                 ==============   ==============    ============ ====
+                 @>>>>>>>>>>>>>   @>>>>>>>>>>>>>    @>>>>>>>>>>>  @>>  
+ commify($total_kbytes),  commify($total_used_kbytes), commify($total_avail_kbytes),   $total_pctused
+.
+
+sub commify {
+	local $_  = shift;
+	1 while s/^(-?\d+)(\d{3})/$1,$2/;
+	return $_;
+}
+

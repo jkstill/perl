@@ -1,0 +1,187 @@
+#!/home/oracle/perl/bin/perl
+
+# template for DBI programs
+
+use FileHandle;
+use DBI;
+use DDL::Oracle;
+use strict;
+
+use Getopt::Long;
+
+our %optctl = ();
+
+Getopt::Long::GetOptions(
+	\%optctl, 
+	"database=s",
+	"username=s",
+	"password=s",
+	"target=s",
+	"z","h","help");
+
+#setup environment - homegrown package
+
+our($db, $username, $password);
+
+if ( ! defined($optctl{database}) ) {
+	Usage();
+	die "database required\n";
+}
+$db=$optctl{database};
+
+if ( ! defined($optctl{username}) ) {
+	Usage();
+	die "username required\n";
+}
+
+if ( ! defined($optctl{target}) ) {
+	Usage();
+	die "target username required\n";
+}
+
+my $targetUser = uc($optctl{target});
+
+$username=$optctl{username};
+$password = $optctl{password};
+
+#print "USERNAME: $username\n";
+#print "DATABASE: $db\n";
+#print "PASSWORD: $password\n";
+#exit;
+
+our $dbh = DBI->connect(
+	'dbi:Oracle:' . $db, 
+	$username, $password, 
+	{ RaiseError => 1, AutoCommit => 0 } 
+	);
+
+die "Connect to  $db failed \n" unless $dbh;
+
+
+      #	Use default resize and schema options.
+      #	query default DBA_xxx tables (could use	USER_xxx for non-DBA types)
+
+DDL::Oracle->configure(
+	dbh => $dbh,
+);
+
+$|++;
+
+print STDERR "Building Index List\n";
+
+# type
+# owner
+# sql
+# save file name
+
+
+
+our %objlist  = (
+
+	schema => [
+		'schema',
+		$targetUser,
+		qq( select '$targetUser', '$targetUser' from dual ),
+		'schema_ddl.sql'
+	],
+
+	#compressed_indexes => [
+		#'index',
+		#$targetUser,
+		#qq( select owner, index_name
+			#from dba_indexes
+			#where owner = '$targetUser'
+			#and compression = 'ENABLED'
+		#),
+		#'compressed_index_ddl.sql'
+	#],
+
+	indexes => [
+		'index',
+		$targetUser,
+		qq( select owner, index_name
+			from dba_indexes
+			where owner = '$targetUser'
+		),
+		'index_ddl.sql'
+	],
+
+	constraints => [
+		'constraint',
+		$targetUser,
+		qq( select owner, constraint_name 
+			from dba_constraints
+			where owner = '$targetUser'
+		),
+		'constraint_ddl.sql'
+	],
+
+	tables => [
+		'table',
+		$targetUser,
+		qq( select owner, table_name
+			from dba_tables
+			where owner = '$targetUser'
+		),
+		'table_ddl.sql'
+	],
+
+	user => [
+		'user',
+		$targetUser,
+		qq( select '$targetUser', '$targetUser' from dual ),
+		'user_ddl.sql'
+	],
+
+
+);
+
+my $sth;
+
+for my $key ( sort keys %objlist ) {
+
+	print "key: $key\n";
+	print "\ttype: $objlist{$key}->[0]\n";
+	print "\ttarget: $objlist{$key}->[1]\n";
+	print "\tsql: $objlist{$key}->[2]\n";
+	print "\tsave file: $objlist{$key}->[3]\n";
+	print "\n\n";
+
+	#	Create a list of one or	more objects
+	$sth = $dbh->prepare( $objlist{$key}->[2] );
+
+	$sth->execute;
+	my $list = $sth->fetchall_arrayref;
+
+	my $obj =	DDL::Oracle->new(
+		type	=> $objlist{$key}->[0],
+		list	=> $list,
+	);
+
+	print STDERR "working on $key for $objlist{$key}->[1]\n";
+
+	my $ddl = $obj->create; 
+
+	open(DDL, qq(+>$objlist{$key}->[3])) || die "cannot create $objlist{$key}->[3] - $!\n";
+
+	print DDL $ddl;    # Use STDOUT so user can redirect to desired file.
+
+}
+
+
+$sth->finish;
+$dbh->disconnect;
+
+
+#use Data::Dumper;
+#print Dumper(%idx);
+
+sub Usage {
+	print "\n";
+	print "usage:  schema_ddl\n";
+	print "    schema_ddl -database dv07 -username scott -password password -target target_user\n";
+	print "\n";
+}
+
+
+

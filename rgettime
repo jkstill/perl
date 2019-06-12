@@ -1,0 +1,14 @@
+#!/home/oracle/perl -w
+
+# make sure perl can find my perl library files
+
+use lib '/home/jkstill/perl';
+
+use getdate;
+
+$t = getdate::GetTime();
+$d = getdate::GetDate();
+
+print "$t\n";
+print "$d\n";
+

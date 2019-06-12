@@ -1,0 +1,78 @@
+#!/usr/bin/perl
+
+# this modified version of client will signal the
+# server on the other machine what stage of the backup we are in
+# so that it may begin a "begin backup"
+# it must be passwd on the command line
+# ex: client.backup av2 BEGIN_BACKUP
+
+($them,$msg,$port) = @ARGV;
+$port = 2345 unless $port;
+$them = 'localhost' unless $them;
+$msg = 'ABORT' unless $msg;
+
+$AF_INET = 2;
+$SOCK_STREAM = 1;
+
+$SIG{'INT'} = 'dokill';
+sub dokill {
+    kill 9,$child if $child;
+}
+
+$sockaddr = 'S n a4 x8';
+
+chop($hostname = `hostname`);
+
+($name,$aliases,$proto) = getprotobyname('tcp');
+($name,$aliases,$port) = getservbyname($port,'tcp')
+    unless $port =~ /^\d+$/;;
+($name,$aliases,$type,$len,$thisaddr) =
+	gethostbyname($hostname);
+($name,$aliases,$type,$len,$thataddr) = gethostbyname($them);
+
+$this = pack($sockaddr, $AF_INET, 0, $thisaddr);
+$that = pack($sockaddr, $AF_INET, $port, $thataddr);
+
+# Make the socket filehandle.
+
+if (socket(S, $AF_INET, $SOCK_STREAM, $proto)) { 
+    print "socket ok\n";
+}
+else {
+    die $!;
+}
+
+# Give the socket an address.
+
+if (bind(S, $this)) {
+    print "bind ok\n";
+}
+else {
+    die $!;
+}
+
+# Call up the server.
+
+if (connect(S,$that)) {
+    print "connect ok\n";
+}
+else {
+    die $!;
+}
+
+# Set socket to be command buffered.
+
+select(S); $| = 1; select(STDOUT);
+
+# Avoid deadlock by forking.
+
+if($child = fork) {
+	print S "$msg\n";
+	close(STDIN);
+    sleep 3;
+    do dokill();
+}
+else {
+	print "$msg\n";
+	close(S);
+}

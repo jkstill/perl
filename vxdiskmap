@@ -1,0 +1,122 @@
+#!/home/oracle/perl -w
+
+=pod
+
+	vxdiskmap - map drives to veritas filesystems 
+
+	useful for calling from other scripts.  e.g.
+	a frontend to iostat could use this to map
+	the iostat output to  filesystems
+
+	Jared Still 02/23/2000
+
+	Jared Still 02/24/2000
+
+	until I find out how to get the device numbers for special files,
+	ls -lL will be used.  this causes this program to be very slow
+	for a large number of disks ( 200+ ).
+
+	In the meantime, all disk info will be written to a file if the file
+	is < 1day old, or does not exist.
+
+=cut
+
+my $DEBUG=0;
+#$DEBUG=1;
+
+my $vxMapFile = '/tmp/vxdiskmap.txt';
+my $rebuildFile = 0;
+my $currentTime = time();
+my $daySeconds = 60 * 24 * 24;
+
+-r $vxMapFile || ( $rebuildFile = 1 );
+
+if ( ! $rebuildFile ) {
+	my @filestats=stat($vxMapFile);
+	my $fileAge = $currentTime - $filestats[9];
+	if ( $fileAge > $daySeconds ) { $rebuildFile = 1 }
+}
+
+
+if ( $rebuildFile ) {
+
+	open(VXGROUPS," /usr/sbin/vxprint -G | /bin/grep -v ASSOC | /bin/grep -v root | /bin/cut -f2 -d' ' |") || die "Could not run vxprint -G - $! \n";
+
+	open(VXDISKMAP,">$vxMapFile") || die "Cannot create $vxMapFile - $! \n";
+
+	# groups
+	while(<VXGROUPS>) {
+
+		chomp;
+		my $group = $_;
+		print "GROUP: $group\n" if $DEBUG;
+
+		# volumes
+
+		# avoid swap disks
+		my $deviceList = `/bin/ls  /dev/vx/dsk/$group/* | /bin/grep -v swap`;
+		$deviceList =~ s/[\r\n]/ /g;
+		print "devicelist : $deviceList\n" if $DEBUG;
+	
+
+		open(VOLUMES," /bin/df -k $deviceList | ") || die "Error opening df -k - $! \n";
+		while(<VOLUMES>) {
+	
+			next if /Filesystem/;
+			next if /^$/;
+
+			chomp;
+			# 0 is device
+			# 5 is filesystem
+			my @line = (split(/\s+/,$_))[0,5];
+
+			print "\tLINE: @line\n" if $DEBUG;
+
+			my $volume = (split(/\//, $line[0]))[5];
+			print "\tVOLUME: $volume\n" if $DEBUG;
+
+			my $filesystem = $line[1];
+			print "\tFILESYSTEM: $filesystem\n" if $DEBUG;
+
+			#volume=$(echo $line | cut -f1 -d: | cut -f6 -d/ )
+			#filesystem=$(echo $line | cut -f2 -d: )
+		
+			# devices
+			#vxprint -tsg $group | grep $volume | cut -c67-74 >| $VX_TMP_FILE
+			open(DEVICE," /usr/sbin/vxprint -tsg $group | /bin/grep $volume |" ) || die "cannot open vxprint -tsg - $! \n";
+			while(<DEVICE>) {
+				chomp;
+				my $deviceLine = $_;
+				my $device = (split(/\s+/,$deviceLine))[7] . 's0';
+				my $ssdLine = qx{ /bin/ls -lL /dev/dsk/${device} };
+
+				my $ssdNum = (split(/,/, $ssdLine))[1];
+				$ssdNum =~ s/^\s+//;
+				$ssdNum = (split(/\s+/, $ssdNum))[0] / 8;
+
+				my $ssd = 'ssd' . $ssdNum;
+
+				print "\t\tDEVICE LINE: $deviceLine\n" if $DEBUG;
+				print "\t\tDEVICE     : $device\n" if $DEBUG;
+				print "\t\tSSDLINE    : $ssdLine\n" if $DEBUG;
+				print "\t\tSSDNUM     : $ssdNum\n" if $DEBUG;
+
+				print "$filesystem $device $ssd\n";
+				print VXDISKMAP "$filesystem $device $ssd\n";
+
+			}
+
+		}
+
+	}
+} else {
+
+	open(VXDISKMAP,"$vxMapFile") || die "Cannot read $vxMapFile - $! \n";
+
+	while(<VXDISKMAP>) { print }
+
+}
+
+
+__END__
+

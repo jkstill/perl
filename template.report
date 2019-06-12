@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+#  @(#) template.report - use this as the beginning of a report
+
+
+format top =
+
+                           @<<<<<<<<<< Claims File
+									$ARGV[1]
+
+                                                   ---- TOTAL ----
+ Amount      Adj  Disp Fee   Deductible     Tax    Stored     Calc
+------------------------------------------------------------------
+
+.
+
+format DETAIL =
+@###.##  @###.##   @###.##      @###.##  @##.##   @###.##  @###.##
+$CostClaim, $CostAdj, $DispFee, $Deductible, $SalesTax, $AmtPaid, $CalcAmt
+.
+
+# summary format
+format sumtop =
+
+                          @<<<<<<<<< Claims File - TOTALS
+								  $ARGV[1]
+
+                                                          ----- TOTAL -----
+   Amount        Adj   Disp Fee      CoPay        Tax     Stored       Calc
+---------------------------------------------------------------------------
+
+.
+
+format SUMMARY =
+@#####.##  @#####.##  @#####.##  @#####.##  @#####.##  @#####.##  @#####.##
+$CalcCostClaimTotal, $CalcCostAdjTotal, $CalcDispFeeTotal, $CalcDeductibleTotal, $CalcSalesTaxTotal, $CalcAmtPaidTotal, $CalcClaimTotal
+.
+
+format calcsumtop =
+
+                          @<<<<<<<< Claims File - TOTALS
+								  $ARGV[1]
+
+                                                          ----- TOTAL -----
+   Amount        Adj   Disp Fee      CoPay        Tax     Stored       Calc
+---------------------------------------------------------------------------
+
+.
+
+format CALCSUM =
+@#####.##  @#####.##  @#####.##  @#####.##  @#####.##  @#####.##  @#####.##
+$CostClaimTotal, $CostAdjTotal, $DispFeeTotal, $DeductibleTotal, $SalesTaxTotal, $AmtPaidTotal, $ClaimTotal
+.
+
+$~ = 'DETAIL';		# format for record
+$^ = 'top';
+write # detail
+
+$~ = 'CALCSUM';
+		
+write; # summary
+		

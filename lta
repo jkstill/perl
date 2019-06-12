@@ -1,0 +1,127 @@
+#!/home/oracle/perl -w
+
+# lsa - log time analyzer
+# for IW team 
+# e.g. lta -filename  /home/edep/log/ede1410.LOG_00010s_00001
+# Jared Still
+# jkstill@teleport.com
+# jkstill@bcbso.com
+
+use strict;
+no strict 'vars';
+use Getopt::Long;
+use Date::Manip;
+
+my %options=();
+
+Getopt::Long::GetOptions( \%options,
+	"lines-per-page:i" ,
+	"filename:s",
+	"help"
+);
+
+
+$main::opt_help = $main::opt_help;
+if (  ! $options{filename} or $options{help} ) {
+	&usage;
+	exit 1;
+}
+
+# set lines per page if sent
+$= = $main::opt_lines_per_page if defined( $main::opt_lines_per_page );
+
+# flush output
+$| = 1;
+
+my ($newDate, $oldDate);
+my $deltaStr = undef;
+my $printDate = undef;
+
+my $dateDelta = undef;
+
+my @rollingDate=();
+my @rollingTime=();
+
+open(LOG,$options{filename}) || die "cannot open $options{filename} - $! \n";
+
+while(<LOG>) {
+	
+	next if ! /^DATE:/ and ! /^TIME:/ ;
+	chomp;
+
+	if ( /^DATE:/ ) {
+		if ( $#rollingDate <= 0 ) {
+			#print "DATE_0\n";
+			my (undef,$date) = split /\s+/;
+			push( @rollingDate,$date);
+		} elsif ( $#rollingDate == 1 ) {
+			#print "DATE_1\n";
+			my (undef,$date) = split /\s+/;
+			shift @rollingDate;
+			push( @rollingDate,$date);
+		} else {
+			warn "Error in rolling date section \n";
+		}
+
+	}
+
+	if ( /^TIME:/ ) {
+		if ( $#rollingTime <= 0 ) {
+			#print "TIME_0\n";
+			my (undef,$time) = split /\s+/;
+			push( @rollingTime,$time);
+		} elsif ( $#rollingTime == 1 ) {
+			#print "TIME_1\n";
+			my (undef,$time) = split /\s+/;
+			shift @rollingTime;
+			push( @rollingTime,$time);
+		} else {
+			warn "Error in rolling time section \n";
+		}
+
+	}
+
+	if ( $#rollingTime == 1 and $#rollingDate == 1 ) {
+
+				$oldDate = $rollingDate[0] . ' ' . $rollingTime[0];
+				$newDate = $rollingDate[1] . ' ' . $rollingTime[1];
+
+				my $err;
+				$dateDelta = Date::Manip::DateCalc($oldDate,$newDate,\$err,1);
+				my $weekDeltaStr = Date::Manip::Delta_Format($dateDelta,0,"%wv");
+				my $dayDeltaStr = Date::Manip::Delta_Format($dateDelta,0,"%dv");
+				my $hourDeltaStr = Date::Manip::Delta_Format($dateDelta,0,"%hv");
+				my $minuteDeltaStr = Date::Manip::Delta_Format($dateDelta,0,"%mv");
+				my $secondDeltaStr = Date::Manip::Delta_Format($dateDelta,0,"%sv");
+				$deltaStr =  
+					substr('00' . $weekDeltaStr,-2,2) . ':' . 
+					substr('00' . $dayDeltaStr,-2,2) . ':' . 
+					substr('00' . $hourDeltaStr,-2,2) . ':' . 
+					substr('00' . $minuteDeltaStr,-2,2) . ':' . 
+					substr('00' . $secondDeltaStr,-2,2) ;
+
+				print "DATE: ", join( ' - ', @rollingDate), "\n";
+				print "TIME: ", join( ' - ', @rollingTime), "\n";
+				print "Delta: $deltaStr\n";
+
+	}
+
+}
+
+
+print STDERR "\n\n";
+
+sub usage {
+	print <<EOF
+
+lta - Log Time Analyzer
+
+	filename       - filename to read log switch info
+	lines-per-page - how many lines per page to print 
+                    default is 60
+
+
+EOF
+}
+
+

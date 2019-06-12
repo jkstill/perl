@@ -1,0 +1,15 @@
+#!/home/oracle/perl -w
+
+use strict;
+use DBI;
+no strict 'vars';
+
+@drivers = DBI->available_drivers;
+
+print "\n\nAvailable DBI drivers:\n\n";
+foreach $driver ( @drivers ) {
+	print "\t$driver\n";
+}
+
+print "\n\n";
+

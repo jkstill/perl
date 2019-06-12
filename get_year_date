@@ -1,0 +1,13 @@
+#!/home/oracle/perl/bin/perl
+
+# all digits
+my $year4 =  (localtime())[5] + 1900 ;
+
+print "$year4\n";
+
+# 2 digits
+my $year2 = substr( (localtime())[5] + 1900, -2,2) ;
+
+print "$year2\n";
+
+

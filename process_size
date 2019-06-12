@@ -1,0 +1,72 @@
+#!/usr/bin/perl 
+
+=head1
+
+	process_size
+
+	displays true process size and resident set size in bytes
+
+   process_size
+         display true process size
+
+         usage: process_size [ -u <username> ]
+
+         -u        show processes for a user only
+
+	* On Solaris, 2.6 or higher is required
+
+=cut 
+
+use Proc::ProcessTable;
+use Getopt::Long;
+use English;
+
+my($result) = Getopt::Long::GetOptions(
+	"u:s",
+	"z","h","help"
+);
+
+if ( $opt_z or $opt_h or $opt_help ) {
+	Usage();
+	exit;
+}
+
+#              user pid  ppid size  rss   cmd
+$HDR_FORMAT = "%-8s %-5s %-5s %-10s %-10s %s\n";
+    $FORMAT = "%-8s %-5s %-5s %-10s %-10s %s\n";
+
+printf($HDR_FORMAT, "USER","PID","PPID","SIZE","RSS","COMMAND");
+
+my @ps, %psKeys;
+
+my $psKey=0;
+
+my $pt=new Proc::ProcessTable;
+
+foreach $p ( @{$pt->table} ) {
+
+	next if $opt_u and (getpwuid($p->uid))[0] ne $opt_u;  
+
+	printf($FORMAT, 
+		(getpwuid($p->uid))[0],
+		$p->pid, $p->ppid, $p->size, 
+		$p->rss, $p->cmndline);
+	
+}
+
+
+sub Usage {
+	print qq/
+
+   process_size
+         display true process size
+
+         usage: process_size [ -u <username> ]
+
+         -u        show processes for a user only
+
+         * On Solaris, 2.6 or higher is required
+
+/;
+}
+

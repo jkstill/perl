@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+# remove birthdates from new nwl file that is used
+# to correct the erroneous one we received earlier
+
+open(NWL,$ARGV[0]) || die "could not open $ARGV[0]\n";
+$BirthDate = "        ";
+$Interval = 50;
+$Counter = 0;
+
+while (read(NWL,$_,94) > 0 ) {
+
+	$ElgRec = $_;
+	$RecCode = substr($ElgRec,0,1);
+
+	if( $RecCode == 2 ) { # detail record
+		substr($ElgRec,57,8) = $BirthDate;
+	}
+		
+	print STDOUT $ElgRec;
+
+	$Counter++;
+	if( $Counter >= $Interval ) {
+		$Counter = 0;
+		print STDERR ".";
+	}
+
+}

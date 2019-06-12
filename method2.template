@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+my %mom = (
+	fname => 'carla',
+	lname => 'still'
+);
+
+
+my %dad = (
+	fname => 'jared',
+	lname => 'still'
+);
+
+my $mom = new test(%mom);
+my $dad = new test(%dad);
+my $sib = new test( fname => 'kevin', lname => 'still' );
+
+print "mom: ", $mom->firstname, "\n";
+print "dad: ", $dad->firstname, "\n";
+print "sib: ", $sib->firstname, "\n";
+
+
+package test;
+
+
+sub new {
+	my $pkg = shift;
+	my $class = ref($pkg) || $pkg;
+	my %iopt = @_;
+
+	bless \%iopt, $class;
+
+};
+
+sub lastname {
+	my $self = shift;
+	$self->{lname};	
+}
+
+sub firstname {
+	my $self = shift;
+	$self->{fname};	
+}
+

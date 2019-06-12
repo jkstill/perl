@@ -1,0 +1,251 @@
+#!/home/oracle/perl  
+#!/opt/share/oracle/bin/perl
+
+# chkalert
+# jared still
+# jkstill@bcbso.com
+
+# monitor the alert log for TNS or ORA errors
+# this runs as a daemon on a unix system.
+# just start it once per database.
+
+# chkalert - check for errors in alert logs
+
+BEGIN { unshift(@INC,'/home/jkstill/perl') }
+
+require "newgetopt.pl";
+
+use email;
+use Daemon;
+
+$OptError = &NGetOpt('d=s','m');
+
+if ($OptError == 0 ) {
+	&Usage;
+	exit(1);
+}
+
+if (! $opt_d ) {
+	&Usage;
+	exit(1);
+}
+
+undef *DataBase;
+undef *MailOut;
+undef *DEBUG;
+undef *GroupFile;
+$DEBUG=0;
+
+$DataBase = $opt_d;
+$MailOut = $opt_m;
+$MailSubject = $DataBase . " Database - Alert Log Errors" ;
+
+# unix group file
+$GroupFile = '/etc/group';
+
+# DBA group
+$DbaGroup = 'dba';
+
+#Oracles oratab file - may be different on your system
+$OratabFile='/var/opt/oracle/oratab';
+
+# names of dba's for debug mode
+@DebugDBAs=('jkstill');
+
+# set uid and gid of oracle
+( $dummy, $dummy,$ouid,$ogid ) = getpwnam('oracle');
+
+# get names of DBA's if mail enabled
+if ($MailOut)
+{
+	# don't need this at blue cross
+	# just mail to dba alias
+	#undef @DbaNames;
+	#open(GRP,$GroupFile);
+	#@GRP=<GRP>;
+	#close(GRP);
+	#@DBA=grep(/^$DbaGroup/,@GRP);
+
+	#$DBA = $DBA[0];
+
+	#chop $DBA;
+
+	# get the second half of line that contains names
+	#($dummy,$dummy,$dummy,$names) = split(/:/,$DBA);
+	
+	# now get the individual names
+	#(@DbaNames)=split(/,/,$names);
+	@DbaNames = qw{ jkstill jhloch tpmoore dxpesse pxzhao oracle };
+	@AltNames = qw{ 
+						glkromm@regence.com mrlegar@regence.com eestewa@regence.com
+						decapel@regence.com kxradhi@regence.com
+						};
+
+
+	if ( $DEBUG ) { @DbaNames = @DebugDBAs }
+
+}
+
+
+# get oracle home from oratab
+open(ORATAB,$OratabFile) || die "unable to open $OratabFile\n";
+chomp(@Oratab=<ORATAB>);
+close(ORATAB);
+($Oratab)=grep(/^$DataBase/,@Oratab);
+
+die "cannot find $DataBase in $OratabFile\n" unless $Oratab;
+
+($d,$ORACLE_HOME) = split(":",$Oratab);
+@PathParts=split("/",$ORACLE_HOME);
+
+$ORACLE_BASE="";
+for $PathPart ( @PathParts ) {
+	last if lc($PathPart) =~ /product/;
+	$ORACLE_BASE = $ORACLE_BASE . $PathPart . "/";
+}
+
+if ($DEBUG) {
+	print "ORATAB: $Oratab\n";
+	print "ORACLE_HOME: $ORACLE_HOME\n";
+	print "PATH_PARTS: @PathParts\n";
+	print "ORACLE_BASE: $ORACLE_BASE\n";
+}
+
+$ORACLE_ADMIN = $ORACLE_BASE . 'admin';
+
+$DumpDir = $ORACLE_ADMIN . '/' . $DataBase . '/' .  'bdump';
+
+# for testing - you need a file '$HOME/tmp/$ORACLE_SID/bdump/alert_ORACLE_SID.log
+if ($DEBUG){$DumpDir = "$ENV{'HOME'}/tmp/" . $DataBase . '/' .  'bdump'}
+
+$AlertLog = $DumpDir . '/alert_' . $DataBase . '.log';
+
+print STDOUT "DATABASE: $DataBase\n";
+print STDOUT "ALERT LOG: $AlertLog\n";
+print STDOUT "DBA's    : @DbaNames\n";
+print STDOUT "ALT's    : @AltNames\n";
+
+($sec,$min,$hour,$mday,$mon,$year) = localtime(time);
+
+$0="chkalert_" . $DataBase;
+
+unless ( $DEBUG ) {
+	Daemon::daemon();
+}
+
+open(LOG,"tail -f $AlertLog|") || warn "unable to open new alert log : $!\n\t$AlertLog\n";
+print "Skipping Daemon\n";
+
+@LogLines=();
+
+$SIG{ALRM}=\&SigAlarm;
+# 300 seconds - 5 minutes
+$AlarmTime=300;
+$MaxLogLines=100;
+alarm($AlarmTime);
+
+print "Entering WHILE loop\n";
+
+while(1)
+{
+
+
+		my($timestamp) = GetTimestamp();
+		print "$timestamp\n";
+		chomp;
+		push(@LogLines, $_ . " encountered  in $DataBase at $timestamp");
+
+		if( $#LogLines >= $MaxLogLines ) {
+			alarm(0);
+			#MailMsgs();
+			alarm($AlarmTime);
+		}
+
+	sleep 5;
+
+}
+
+sub SigAlarm {
+	MailMsgs();
+	alarm($AlarmTime);
+}
+
+sub MailMsgs {
+
+	if( $MailOut and @LogLines )
+	{
+		my($ErrMsg) = "\n" . join("\n",@LogLines);
+
+		if ( $DEBUG ) { 
+			print STDOUT "\n\nAlarm Time: ", GetTimestamp(),"\n\n";
+			eval{ open(ERR,">>/tmp/chkalert.log") };
+			if($@){ print "SUBJ: $MailSubject - $ErrMsg\n" }
+			else { print ERR "SUBJ: $MailSubject - $ErrMsg\n"; close ERR }
+		}
+		else { 
+			email::SendMail(\@DbaNames, $ErrMsg, $MailSubject);
+			if ( grep(/PIMS/, @LogLines ) ) {
+				email::SendMail(\@AltNames, $ErrMsg, $MailSubject);
+				email::SendMail(['jkstill@bcbso.com'] , 'PIMS Errors mailed to developers!' ,'PIMS Errors' );
+			}
+		}
+	}
+	@LogLines=();
+}
+
+sub Usage {
+	print "\n$0: -d <database sid>  [-m]  \n";
+	print "\n scan the alert log for 'ORA' errors \n\n";
+	print "      -m mail output to all in dba group\n";
+	print "      -d database to monitor\n\n";
+	exit 1;
+}
+
+
+
+sub GetTimestamp {
+
+	my($sec,$min,$hours,$mday,$mon,$year)=localtime;
+	$mon++;
+
+	$mon = '000'. ${mon};
+	$mon =~ s/^(.*)(..)$/$2/;
+
+	$mday = '000'. ${mday};
+	$mday =~ s/^(.*)(..)$/$2/;
+
+	$hours = '000'. ${hours};
+	$hours =~ s/^(.*)(..)$/$2/;
+
+	$min = '000'. ${min};
+	$min =~ s/^(.*)(..)$/$2/;
+
+	$sec = '000'. ${sec};
+	$sec =~ s/^(.*)(..)$/$2/;
+
+	my($timestamp) = "$mon/$mday/$year - $hours:$min:$sec";
+
+	return $timestamp;
+}
+
+__END__
+
+this program will run as a daemon, checking the alert log
+for 'ORA' errors.
+
+It will send mail to those in the DBA group when an error
+is found in the alert log.
+
+It currently does not check to see if it is already running, 
+so don't run it more than once for a database
+
+It will only send mail every AlarmTime seconds, or when the
+number of error is >= MaxLogLines
+
+This is to prevent driving your mail agent crazy if you 
+start getting a large number of errors suddenly.  Rather
+than mailing each message separately, they are grouped 
+together into a single mail message.
+
+
+

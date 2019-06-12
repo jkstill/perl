@@ -1,0 +1,96 @@
+#!/home/oracle/perl/bin/perl
+
+use Fcntl qw(:flock);
+use IO::File;
+use Carp;
+
+$SIG{HUP}=\&cleanup;
+$SIG{INT}=\&cleanup;
+$SIG{QUIT}=\&cleanup;
+$SIG{TERM}=\&cleanup;
+
+my $lockFile = '/tmp/chkalert.ts05';
+my $pid=$$;
+my $lockPid;
+my $fh_lockFile = new IO::File;
+
+# pass handle, filename and PID
+lockFile($fh_lockFile,$lockFile,$pid);
+
+while ( 1 ) {
+	print "Sleeping - file is locked\n\n";
+	for ( $x=0;$x<10000;$x++ ) { sleep 1 }
+} 
+
+
+sub cleanup {
+	undef $fh_lockFile;
+	unlink $lockFile;
+	exit;
+}
+
+sub lockFile {
+
+	my $fh_lockFile = shift || croak "lockFile requires a file handle\n";
+	my $lockFile = shift || croak "lockFile requires a file name\n";
+	my $pid = shift || croak "lockFile requires a PID\n";
+
+	if ( -r $lockFile and -w $lockFile ) {
+
+		$fh_lockFile->open($lockFile) || die "could not open $lockFile(0) - $! \n";
+		($lockPid) = <$fh_lockFile>;
+		$fh_lockFile->close;
+
+		print "existing lock file '$lockFile' created by PID $lockPid\n";
+		print "will try to lock\n";
+
+		# file must be opened with intent to write
+		# required on Solaris, don't know about other platforms
+		$fh_lockFile->open("+<$lockFile" ) || die "could not open $lockFile(1) - $! \n";
+
+		# lock file, recreate and relock
+		# print PID to file
+		if ( flock $fh_lockFile, LOCK_EX|LOCK_NB ) {
+
+			$fh_lockFile->open(">$lockFile" ) || die "could not create $lockFile(2) - $! \n";
+
+			if ( flock $fh_lockFile, LOCK_EX|LOCK_NB ) { $fh_lockFile->printflush($pid) }
+			else { die "could not obtain exclusive lock on $lockFile(3) - $! \n"}
+
+		} else { die "process $lockPid holding exclusive lock on $lockFile(4) - $! \n"}
+
+	} else { # lock file does not exist
+		$fh_lockFile->open(">$lockFile" ) || die "could not create $lockFile(5) - $! \n";
+		$fh_lockFile->printflush($pid);
+		unless ( flock $fh_lockFile, LOCK_EX|LOCK_NB ) 
+			{ die "could not obtain exclusive lock on $lockFile(4) - $! \n"}
+	}
+
+}
+
+
+__END__
+
+check for existence of file
+
+if file exists
+	try to lock it
+	if lock succeeds
+		unlock file
+		open with truncate
+		lock file
+		if lock succeeds
+			write PID
+		else
+			exit with error
+		end if
+	else
+		exit with error
+	end if
+else
+	create file
+	lock file
+	write PID to file
+end if
+		
+

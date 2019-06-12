@@ -1,0 +1,181 @@
+#!/home/oracle/perl/bin/perl
+
+# piostat - return select iostats
+
+use Getopt::Long;
+
+my($result) = Getopt::Long::GetOptions(
+	"seconds:n",
+	"iterations:n",
+	"service-time:n",
+	"pct-busy:n",
+	"-no-header",
+	"-no-filesystem",
+	"z","h","help"
+);
+
+if ( $opt_z or $opt_h or $opt_help ) {
+	Usage();
+	exit;
+}
+
+if ( ! defined($opt_service_time ) ) {
+	$opt_service_time = 0;
+}
+
+if ( ! defined($opt_pct_busy ) ) {
+	$opt_pct_busy = 0;
+}
+
+if ( ! defined($opt_seconds ) ) {
+	$opt_seconds = 1;
+}
+
+# increment iterations, as the first
+# one is thrown away
+
+if ( ! defined($opt_iterations ) ) {
+	$opt_iterations = 5;
+} else { $opt_iterations++ }
+
+if ( ! defined($opt_no_header ) ) {
+	$opt_no_header = 0;
+}
+
+if ( ! defined($opt_no_filesystem ) ) {
+	$opt_no_filesystem = 0;
+}
+
+my @iostats;
+my ( $service_time_pos, $pct_busy_pos ) = (7,9);
+
+if ( $opt_no_header ) {
+
+	#in $^ ($FORMAT_TOP_NAME).  The current output page number is
+	#stored in $% ($FORMAT_PAGE_NUMBER), and the number of lines
+	#on the page is in $= ($FORMAT_LINES_PER_PAGE).  
+
+	# set top of form header to an empty one
+	$^ = 'NOHDR';
+	# number of lines on page
+	$= = 60000;
+
+} else { $^ = 'HDR' }
+
+#print "pct busy  $opt_pct_busy\n";
+#print "max svc   $opt_service_time\n";
+
+# map devices to filesystems via the vxdiskmap perl program
+# vxdiskmap is /home/jkstill/perl/vxdiskmap
+
+my %deviceMap=();
+
+if ( ! $opt_no_filesystem ) {
+	warn "Generating Disk Map - may take a minute\n";
+
+	my $diskMapper;
+	my @diskMappers = qw( 
+		/opt/share/oracle/lib/vxdiskmap 
+		/home/jkstill/perl/vxdiskmap 
+	);
+
+	for my $mapper ( @diskMappers ) {
+		if ( -x $mapper ) { $diskMapper = $mapper; last }
+	}
+
+	open(DISKMAP,"$diskMapper |" ) || die "cannot start vxdiskmap - $! \n";
+	#open(DISKMAP,"vxdiskmap.txt" ) || die "cannot start vxdiskmap - $! \n";
+
+	while(<DISKMAP>) { 
+		chomp;
+		my ($fileSystem, $dummy, $device) = split /\s+/;
+		$deviceMap{$device} = $fileSystem;
+	}
+
+	#for my $key ( keys %deviceMap ) {
+		#print "DEVICE:  $key,  FILESYSTEM: $deviceMap{$key} \n";
+	#}
+	#exit;
+
+}
+
+
+open( IOSTAT, "/usr/bin/iostat -x $opt_seconds $opt_iterations |" ) || die "cannot start iostat - $1 \n";
+
+# ignore first page of output
+# it is cumulative
+
+# used to ignore first page of output, as this is
+# a cumalitive total form bootup, which is inappropriate
+# for tracking over time.
+
+$iostatPageCount=-1;
+
+while(<IOSTAT>) {
+
+	#print;
+	#next;
+
+	$iostatPageCount++ if /extended/;
+	next unless $iostatPageCount;
+
+	tr /[ |\s]//s;
+	@iostats = split(/\s/);
+	if ( ! $iostats[0]  ) {
+		# force a formfeed on blank line
+		$- = 0;
+		next;
+	}
+	next if $iostats[$service_time_pos] < $opt_service_time;
+	next if $iostats[$pct_busy_pos] < $opt_pct_busy;
+	write;
+}
+
+print "\n\n" unless $opt_no_header;
+
+
+sub Usage {
+	print qq/
+
+   piostat  -seconds N -iterations N [ -service-time N -pct-busy N -no-header -no-filesystem]
+
+   example:  piostat -seconds 10 -iterations 6
+             piostat -seconds 10 -iterations 6 -service-time 50 -pct-busy 30
+
+/
+
+}
+
+format NOHDR =
+.
+
+format HDR = 
+filesystem       device      read    wrt    kb/r   kb/w  queue active    avg   pct  pct
+                            p/sec  p/sec   p/sec  p/sec length    ops  svc/t  wait busy
+---------------------------------------------------------------------------------------
+.
+
+format STDOUT = 
+@<<<<<<<<<<<<<<< @<<<<<<<< @###.# @###.# @####.# @###.# @###.#  @##.# @###.#   @##  @##
+$deviceMap{'s'.$iostats[0]}, @iostats
+.
+
+__END__
+
+iostat -x returns:
+
+                               extended device statistics
+device    r/s  w/s   kr/s   kw/s wait actv  svc_t  %w  %b 
+atapicd2  0.0  0.0    0.2    0.0  0.0  0.0   22.8   0   0 
+dad0      0.1  1.3    2.0    9.9  0.0  0.0   46.3   0   2 
+fd0       0.0  0.0    0.0    0.0  0.0  0.0    0.0   0   0 
+nfs1      0.0  0.0    0.0    0.0  0.0  0.0    4.6   0   0 
+nfs2      0.0  0.0    0.0    0.0  0.0  0.0   55.6   0   0 
+nfs3      0.0  0.0    0.0    0.0  0.0  0.0    3.9   0   0 
+nfs11     0.0  0.1    0.2    0.7  0.0  0.0   58.0   0   0 
+nfs13     0.1  0.0    0.1    0.0  0.0  0.0    4.4   0   0 
+nfs1721   0.0  0.0    0.0    0.3  0.0  0.0  907.8   0   0 
+nfs4178   2.1  0.0    2.1    0.0  0.0  0.0    3.9   0   1 
+nfs4180   0.0  0.0    0.0    0.0  0.0  0.0    0.0   0   0 
+nfs4181   2.3  0.0    2.3    0.0  0.0  0.0    4.6   0   1 
+

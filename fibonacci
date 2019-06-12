@@ -1,0 +1,17 @@
+#!/usr/bin/perl 
+
+
+$x=0;
+$y=1;
+
+for ( $n=0;$n<=15;$n++) {
+	$z = $x + $y;
+
+	print "FIBONACCI: $z\n";
+
+	$x = $y;
+	$y = $z;
+
+}
+
+

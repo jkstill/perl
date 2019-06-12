@@ -1,0 +1,164 @@
+#!/home/oracle/perl/bin/perl
+
+=head1  prman
+
+generate rman scripts from templates
+
+=over 2
+
+e.g.  $prg -filename templates/full_disk.tmpl -system vdrprod
+
+two files will be created:
+
+   
+=over 4
+
+full_disk_vdrprod.repl - the code to create the stored script
+full_disk_vdrprod.exec - the code to execute the stored script
+
+=back 4
+
+=cut
+
+use warnings;
+use strict;
+use File::Basename qw{fileparse basename};
+
+use Getopt::Long;
+
+our %optctl = ();
+
+Getopt::Long::GetOptions(
+	\%optctl, 
+	"filename=s",
+	"system=s",
+	"debug!"
+);
+
+usage(1) unless $optctl{filename};
+usage(1) unless $optctl{system};
+
+my ($file, $path, $suffix) = fileparse($optctl{filename},'.tmpl' );
+my $command = $file;
+
+my $createScript = $file . '_' . $optctl{system} . '.repl';
+#print "create script name: $createScript\n";
+
+open(FH,">$createScript") || die "failed to create $createScript - $!\n";
+*STDOUT = *FH;
+
+print "\nreplace script ${command}_$optctl{system} {\n";
+
+prman->processFile( 
+	FILE => $optctl{filename}, 
+	SYSTEM => $optctl{system},
+	DEBUG => $optctl{debug}
+);
+
+print "}\n\n";
+
+my $execScript = $file . '_' . $optctl{system} . '.exec';
+#print "exec script name: $execScript\n";
+
+open(FH,">$execScript") || die "failed to create $execScript - $!\n";
+*STDOUT = *FH;
+
+print "run { execute script ${command}_$optctl{system}; }\n";
+
+## end of main
+
+sub usage {
+
+	my $exitVal = shift;
+	my $prg = basename($0);
+
+	print qq(
+
+usage: $prg
+
+  -filename  template file to load
+  -system    system to generate for
+             <<SYSTEM>> tags are replaced with this value
+
+  -debug     dump some system variables to STDERR while running
+
+
+  e.g.  $prg -filename templates/full_disk.tmpl -system vdrprod
+
+        two files will be created:
+        
+        full_disk_vdrprod.repl - the code to create the stored script
+        full_disk_vdrprod.exec - the code to execute the stored script
+
+);
+
+	exit $exitVal;
+
+}
+
+
+package prman;
+
+=item B<processFile>
+
+=over 4
+
+recursive method for parsing rman template files
+
+  prman->processFile( 
+     FILE => $optctl{filename}, 
+     SYSTEM => $optctl{system},
+     DEBUG => $optctl{debug}
+  );
+
+=back
+	
+=cut
+
+sub processFile {
+
+	my ($self, %args) = @_;
+
+	use IO::File;
+	use File::Basename qw{fileparse dirname basename};
+	use Cwd;
+
+	my ($file, $path) = fileparse($args{FILE});
+
+	my $cwd = cwd();
+	chdir $path if $path;
+
+	if ( $args{DEBUG} ) {
+		use Data::Dumper;
+		print STDERR "ARGS: ", Dumper(\%args), "\n";
+		print STDERR "FILE: $file\n";
+		print STDERR "PATH: $path\n";
+		print STDERR "CWD : $cwd\n";
+	}
+
+	my $fh = new IO::File;
+	$fh->open($file) || die "cannot open $file - $!\n";
+
+	while(<$fh>) {
+		if ( /<<SYSTEM>>/ ) {
+			s/<<SYSTEM>>/$args{SYSTEM}/g;
+		}
+			
+		if ( /^#include/goi ) {
+			my (undef, $includeFile) = split(/\s+/);
+			prman->processFile( 
+				FILE => $includeFile, 
+				SYSTEM => $args{SYSTEM},
+				DEBUG => $args{DEBUG}
+			);	
+			next;
+		}
+		print;	
+	}
+
+	chdir $cwd;
+
+}
+
+
+

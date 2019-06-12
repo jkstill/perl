@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+# report.template
+
+$MACHINE=`uname -n`;
+chop $MACHINE;
+push(@INC,"/usr1$MACHINE/jared/perl/");
+
+# sort by name
+$TRUE = 1;
+$FALSE = 0;
+
+format HEADER =
+Report Header Here
+
+Name               ---------- Memory ----------- 
+                   Pages         Bytes       MEG
+________________________________________________
+
+.
+
+format DETAIL =
+@<<<<<<<<<  @###########   @##########  @##.####
+$olduser, $PsSize, $Bytes, $Meg
+.
+
+format SUMMARY =
+ TOTAL      @###########   @##########  @##.####
+$TotalSize, $TotalBytes, $TotalMeg
+.
+
+
+$~ = 'DETAIL';  	# detail line
+$^ = 'HEADER';		# report header
+
+while (<WHATEVER>) {
+
+	# report processing goes here
+
+}
+
+$~ = 'SUMMARY';	# make the summary template the detail and print
+write;
+

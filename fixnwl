@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+# fix nwl file which has no effective date
+# new RxNet universal elg format
+
+open(NWL,$ARGV[0]) || die "could not open $ARGV[0]\n";
+$EffDate = "06011994";
+$Interval = 50;
+$Counter = 0;
+
+while (read(NWL,$_,94) > 0 ) {
+
+	$ElgRec = $_;
+	$RecCode = substr($ElgRec,0,1);
+
+	if( $RecCode == 1 ) { # header record
+		substr($ElgRec,12,8) = $EffDate;
+	}
+
+	if( $RecCode == 2 ) { # detail record
+		substr($ElgRec,76,8) = $EffDate;
+	}
+		
+	print STDOUT $ElgRec;
+
+	$Counter++;
+	if( $Counter >= $Interval ) {
+		$Counter = 0;
+		print STDERR ".";
+	}
+
+}

@@ -1,0 +1,18 @@
+#!/usr/bin/perl
+
+while (<>) {
+	print (eval $_);
+	print "\n";
+
+	if ($@) {
+		print qq{
+
+You seem to have encountered an error
+err: $@
+
+Use CTL-C to exit
+
+};
+	}
+
+}

@@ -1,0 +1,72 @@
+
+--- TRACE CONFIGURATION INFORMATION FOLLOWS ---
+New trace stream is /export/home/jkstill/perl/cli.trc
+New trace level is 4
+--- TRACE CONFIGURATION INFORMATION ENDS ---
+
+--- PARAMETER SOURCE INFORMATION FOLLOWS ---
+Attempted load of system pfile source /www/OraHome1/network/admin/sqlnet.ora
+Parameter source loaded successfully
+
+Attempted load of local pfile source /export/home/jkstill/.sqlnet.ora
+Parameter source was not loaded
+
+ -> PARAMETER TABLE LOAD RESULTS FOLLOW <-
+Successful parameter table load
+ -> PARAMETER TABLE HAS THE FOLLOWING CONTENTS <-
+  SQLNET.EXPIRE_TIME = 0
+  NAME.DEFAULT_ZONE = world
+  TRACE_LEVEL_CLIENT = USER
+  NAMES.DEFAULT_DOMAIN = world
+--- PARAMETER SOURCE INFORMATION ENDS ---
+
+--- LOG CONFIGURATION INFORMATION FOLLOWS ---
+Log stream will be "/export/home/jkstill/perl/sqlnet.log"
+Log stream validation not requested
+--- LOG CONFIGURATION INFORMATION ENDS ---
+
+nigini: Count in NI global area now: 1
+nigini: Count in NI global area now: 1
+nrigbni: Unable to get data from navigation file tnsnav.ora
+nncpmlf_make_local_addrfile: construction of local names file failed
+nncpmsf_make_sys_addrfile: system names file is /www/OraHome1/network/admin/tnsnames.ora
+nigtrm: Count in the NI global area is now 1
+nigtrm: Count in the NL global area is now 1
+nigini: Count in NI global area now: 2
+nigini: Count in NI global area now: 2
+nncpmlf_make_local_addrfile: construction of local names file failed
+nncpmsf_make_sys_addrfile: system names file is /www/OraHome1/network/admin/tnsnames.ora
+niotns: niotns: setting up interrupt handler...
+niotns: Not trying to enable dead connection detection.
+niotns: Calling address: (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=rsysvicdev)(PORT=1521)))(CONNECT_DATA=(SID=VDRDEV)(CID=(PROGRAM=)(HOST=rsysvicdev)(USER=jkstill))))
+nscall: connecting...
+nttbnd2addr: port resolved to 1521
+nttbnd2addr: looking up IP addr for host: rsysvicdev
+nsopen: opening transport...
+nttcnp: Validnode Table IN use; err 0x0
+nttcni: trying to connect to socket 7.
+nttcon: set TCP_NODELAY on 7
+nsopen: transport is open
+nsnainit: inf->nsinfflg[0]: 0x41 inf->nsinfflg[1]: 0x41
+nsopen: global context check-in (to slot 0) complete
+nscon: doing connect handshake...
+nscon: sending NSPTCN packet
+nscon: got NSPTRS packet
+nscon: sending NSPTCN packet
+nscon: got NSPTAC packet
+nscon: doing connect handshake...
+nscon: nsctxinf[0]=0x41, [1]=0x41
+nsnainconn: inf->nsinfflg[0]: 0x41 inf->nsinfflg[1]: 0x41
+nsnasend: bytes to send: 143
+nsdo: 143 bytes to NS buffer
+nsnareceive: buffer address: 0xffbea59c bytes wanted: 2048
+nsnareceive: calling NS to receive 2048 bytes into address 0xffbea59c
+nsdo: 117 bytes from NS buffer
+nsnareceive: received 117 bytes
+nsnareceive: no more data to receive - returning
+nsnareceive: total bytes received: 117
+nstimarmed: no timer allocated
+nsclose: closing transport
+nsclose: global context check-out (from slot 0) complete
+nigtrm: Count in the NI global area is now 1
+nigtrm: Count in the NL global area is now 1

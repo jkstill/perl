@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+
+# pipewrite - this program creates a pipe, starts
+# the pipereader, and writes to the pipe
+
+$date = `date +%Y%m%d%H%M%S`;
+$pipename = "/tmp/grpclose.pipe" . $date;
+chop($pipename);
+
+# create the pipe
+$cmd = "/etc/mknod " .  $pipename . " p";
+$pipe_err = system("$cmd");
+
+die "unable to create pipe - $pipename\n" if $pipe_err;
+
+# the pipe reader MUST be started before opening the pipe
+$pr_err = system("piperead $pipename &");
+open(PIPE,">$pipename") || die "cannot write to pipe - $pipename \n";
+
+die "error running pipe reader \n" if $pr_err;
+
+push(@PARAMS,"142 04/30/1996 jared");
+push(@PARAMS,"343 04/30/1996 jared");
+push(@PARAMS,"459 04/30/1996 jared");
+
+for $PARAM ( @PARAMS )
+{
+	# send the parameters in ONE line!
+	# make sure there is only ONE linefeed
+	print PIPE "$PARAM\n";
+}
+
+

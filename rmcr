@@ -1,0 +1,5 @@
+#!/home/oracle/perl/bin/perl -pi
+
+s/\r//g;
+
+

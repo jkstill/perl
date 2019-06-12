@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+# make sure perl can find my perl library files
+$MACHINE=`uname -n`;
+chop $MACHINE;
+push(@INC,"/usr1$MACHINE/jared/perl/");
+
+@PATH = split(/:/, $ENV{"PATH"});
+$FILE_TO_FIND=$ARGV[0];
+
+print "\n";
+
+foreach $path ( @PATH ) {
+	-f "$path/$FILE_TO_FIND" && print "$path/$FILE_TO_FIND\n";
+}
+
+print "\n";

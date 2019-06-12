@@ -1,0 +1,35 @@
+#!/usr/local/bin/perl -w
+
+open(GRP,"/etc/group");
+
+@GRP=<GRP>;
+close(GRP);
+
+$grpname='';
+$grpid='';
+$dummy='';
+
+undef @GRP2;
+for $f ( @GRP ) 
+{
+	( $grpname,$dummy,$grpid) = split(/:/,$f);
+	$GRP2{$grpid} = $grpname;
+	#print STDERR "$grpid - $GRP2{$grpid}\n";
+}
+
+
+open(PASSWD,"sort -nt: +3 /etc/passwd |");
+
+$uname='';
+$passwd='';
+$uid='';
+$gid='';
+$gcos='';
+
+while (<PASSWD>) 
+{
+	( $uname,$passwd,$uid,$gid,$gcos ) = split(/:/,$_);
+	if ( $passwd ne '*' ) { print "$GRP2{$gid}\t- $gcos\n" }
+}
+
+

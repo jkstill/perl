@@ -1,0 +1,14 @@
+#!/home/oracle/perl/bin/perl
+
+use English;
+
+print qq{
+
+  Real User   ID: $UID
+  Real Group  ID: $GID
+
+  Effective User  ID: $EUID
+  Effective Group ID: $EGID
+
+};
+

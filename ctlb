@@ -1,0 +1,82 @@
+#!/home/oracle/perl/bin/perl
+
+# make a copy of 'backup controlfile to trace'
+# and the control file itself
+
+BEGIN { unshift(@INC, "/home/jkstill/perl" ) }
+
+use FileHandle;
+use DBI;
+use Carp;
+use OraEnv;
+use strict;
+no strict 'vars';
+
+use Getopt::Long;
+
+my($result) = Getopt::Long::GetOptions("database:s","username:s","z","h","help");
+
+# GetOpt returns a zero on error
+#if ( ( ! $result ) || ($opt_help or $opt_z or $opt_h ) ) { &main::Usage;exit }
+
+# tell -w to shut up
+$opt_z = $opt_z;
+$opt_help=$opt_help;
+$opt_h=$opt_h;
+
+#setup environment - homegrown package
+
+my($db, $username, $password);
+
+if ( ! defined($opt_database) ) {
+	Usage();
+	die "database required\n";
+}
+
+$db=$opt_database;
+OraEnv::SetEnv($db);
+if ( ! defined($opt_username) ) {
+	Usage();
+	die "username required\n";
+}
+
+$username=$opt_username;
+$password = OraEnv::GetPassWord($db,$username);
+
+#print "USERNAME: $username\n";
+#print "DATABASE: $db\n";
+#print "PASSWORD: $password\n";
+#exit;
+
+local($Driver)='Oracle';
+
+# flush buffers so output appears in file immediately
+#LOG->autoflush(1);
+
+$dbh = DBI->connect('dbi:Oracle:' . $db, $username, $password );
+
+croak "Connect to  $db failed \n" unless $dbh;
+
+# get server pid from v$session, v$process like in who2.sql
+$MySql="select  from dual";
+
+$sth = $dbh->prepare($MySql);
+
+$rv = $sth->execute || croak "error with statement $MySql \n";
+
+while( $ary = $sth->fetchrow_arrayref ) {
+	print "\t\t$${ary[0]}\n";
+}
+
+$sth->finish;
+$dbh->disconnect;
+
+sub Usage {
+	print "\n";
+	print "usage:  DBI_template.pl\n";
+	print "    DBI_template.pl -database dv07 -username scott\n";
+	print "\n";
+}
+
+
+

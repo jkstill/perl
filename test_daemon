@@ -1,0 +1,19 @@
+#!/home/oracle/perl/bin/perl
+
+$x=getlogin;
+print "$x\n";
+print "$0\n";
+
+$ppid = $$;
+
+fork;
+$pid = $$;
+
+if ( $pid == $ppid ) {
+	exit;
+}else{
+	$0="test_daemon";
+	for(;;){
+	}
+}
+

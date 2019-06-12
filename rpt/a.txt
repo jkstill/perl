@@ -1,0 +1,21 @@
+     SCOTT                BONUS                 COMM          6
+                                                 JOB          6
+                                                 SAL          8
+                                               ENAME         20
+                AVG_SALARY_VIEW         AVG_SAL_DEPT          4
+                                              DEPTNO          2
+                    BINCOL_TEST          BINARY_DATA       2000
+                                          CLEAR_TEXT       2000
+   PRJSTAT     STATUS_HISTORIES    COMMENT_STATUS_PK         12
+                                           PERSON_PK         12
+                                COMMENT_MILESTONE_PK         12
+                                              STATUS          1
+                                         STATUS_DATE          7
+                                          PROJECT_PK         12
+                                     COMMENT_RISK_PK         12
+                  PROJECT_TEAMS            PERSON_PK         12
+                                          COMMENT_PK         12
+                   PROJECT_VIEW      MEMBER_COMMENTS         30
+                                         MEMBER_NAME         20
+                                        PROJECT_NAME         50
+                                    PROJECT_COMMENTS         50

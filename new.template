@@ -1,0 +1,87 @@
+
+
+=head1
+
+Here's one example for a constructor
+
+=cut
+
+sub new {
+
+	# class method
+	# since it is called by package name, we have
+	# to include that in the parameters
+	my $pkg = shift;
+	my $class = ref($pkg) || $pkg;
+
+	my ( $db, $username, $password ) = @_;
+
+	my $dbh = $class->SUPER::connect(
+		'dbi:Oracle:' . $db,
+		$username, $password,
+		{ RaiseError => 1, AutoCommit => 0 }
+	);
+
+	croak "Connect to  $db failed \n" unless $dbh; 
+
+	my $connection = bless $dbh, $class;
+	return $connection;
+
+}
+
+	
+
+	
+=head1 new
+
+Here's another example
+
+usage example:
+
+   my $vobj = new GQ($dbh, $synonym_name);
+   die "GQ object creation failed \n" unless $vobj;
+	
+	instantiate a new V$ table object.  
+
+	an optional WHERE clause and ORDER BY clause
+	may be specified as well
+
+	example: 
+		my $vobj = new GQ(
+			$dbh, 'v$parameter',
+			{
+				WHERE => "name like 'log%',
+				ORDER_BY => "name desc"
+			}
+		);
+
+=cut
+
+sub new {
+
+	my ($pkg) = shift;
+	my $class = ref($pkg) || $pkg;
+
+	my ($dbh, $gqSynonym, $optionHash ) = @_;
+	my $gqTable = $gqSynonym;
+
+	# escape the dollar sign
+	$gqTable = uc($gqTable);
+	$gqTable =~ s/^V\$/V_\$/;
+
+	my $colref = _getColumns($dbh, $gqTable);
+
+	my $sql = 'select ' . join(", ", @$colref);
+	$sql .= qq/ from $gqSynonym/;
+
+	$sql .= ' where ' . $optionHash->{WHERE} if defined $optionHash->{WHERE};
+	$sql .= ' order by ' . $optionHash->{ORDER_BY} if defined $optionHash->{ORDER_BY};
+
+	my $sth = $dbh->prepare($sql);
+	croak "Failed to prepare $sql - $dbh->errstr\n" unless $sth;
+	my $rv = $sth->execute || die "Failed to execute $sql - $sth->errstr\n";
+	my $handle = bless $sth, $class;
+	return $handle;
+	
+}
+

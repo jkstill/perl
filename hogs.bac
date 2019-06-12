@@ -1,0 +1,406 @@
+#!/usr/bin/perl
+#  @(#) hogs.prl - collect data from system accounting reports to show usage 
+#                  per login account
+#                 
+# run at night after system accounting has been processed
+#
+# can import output into Quattro Pro Usage Graph if 
+# you use "-c" command line option
+
+require "tmpname.pl";
+require "newgetopt.pl";
+
+$TRUE=1;
+$FALSE=0;
+$ReportInterval = 100; # interval of lines to report to screen
+$DefaultPacctFiles = 'pacct';
+$DefaultDir = '/usr/adm/';
+$GrepString = ".";
+$CutCmd = "";
+$FieldOffset = 1;
+$UsageThreshold = 500;
+
+# set signal handler
+$SIG{'INT'} 	= 'handler';
+$SIG{'QUIT'} 	= 'handler';
+$SIG{'KILL'} 	= 'handler';
+
+# get number of command line options before calling nGetOpt
+# we may need them for building file list
+
+$FileArgc = int(( $#ARGV + 1 ) / 2 );
+$OrigArgc = $#ARGV ;
+
+# command line options
+# -f option for filename required
+# -a use all available pacct files
+# -u user
+# -h help
+# -g grep
+# -c comma delimited - no headers
+# -o all lines with usage less than threshold will bg grouped with "other"
+
+$OptError = &NGetOpt('f=s@','a','g=s','h','u','c','o');
+
+if ($OptError == 0 ) {
+	print STDERR "error in command line \n";
+	&Usage();
+	exit(1);
+}
+
+if( $opt_h == 1) {
+	&Usage();
+	exit(1);
+}
+
+# can't specify both '-a' and '-f'
+if ( ($opt_a != 0 ) && ( $opt_f[0] ne '' ) ) {
+	print STDERR "cannot specify both -a and -f \n";
+	exit(1);
+}
+
+if ( $opt_o ) { # group other
+	print STDERR "grouping those below usage threshold of $UsageThreshold into other\n";
+	$OrigArgc--;
+}
+	
+if ( $opt_g ne '' ) {
+	$GrepString = $opt_g ;
+	$OrigArgc--; # i know, this is a kludge
+	$OrigArgc--; # will do it correctly later ( in a loop )
+}
+
+# use 'cut' to cut the first field and sort by user
+if ( $opt_u == 1 ) {
+	# cut command will eliminate the first field output from
+	# acctcom, which is the command name.
+	# the first field will then be the user name
+
+	$CutCmd = "| cut -c12-150 ";
+	$FieldOffset = 0;
+	print STDERR "sorting by user\n";
+	$OrigArgc--; 
+}
+
+# comma delimited?
+if ( $opt_c ) { 	# comma delimited format
+	$~ = 'SPDETAIL';		# format for record
+	$^ = 'sptop';
+	$OrigArgc--; 
+	print STDERR "printing in comma delimited format \n";
+} else {
+	$~ = 'DETAIL';		# format for record
+	$^ = 'top';
+}
+
+
+#build file list
+# if no opts, just use pacct
+if ( $OrigArgc < 0 ) { 			# $#ARGV represents upper member of cmdline array
+	print STDERR "using default ", $DefaultDir, $DefaultPacct, "\n";
+	$PacctFiles[0] = $DefaultPacctFiles;
+} else {
+
+	opendir(DIR,$DefaultDir);
+
+	if ( $opt_a == 1 ) { 		# get all pacct's
+		print STDERR "reading ALL /usr/adm/pacct* \n";
+		@PacctFiles = grep(/pacct/, readdir(DIR) ) ;
+	} else { # process command line file args -f option
+		print STDERR "reading SELECTED /usr/adm/pacct* \n";
+		for( $FileCounter = 0; $FileCounter < $FileArgc; $FileCounter++ ) {
+			$PacctFiles[$FileCounter] = $opt_f[$FileCounter];	
+		}
+	}  
+	closedir(DIR);
+}
+
+
+# spreadsheet format
+format dummydetail =
+.
+
+format sptop =
+COMMAND,         REAL ,   CPU-SECS,      CPU-SECS,    CHAR,    DISK, CPU,  HOG,K-CORE,      OVERALL 
+NAME   ,        (SECS),   SYS,              USER       IO,      IO, FCTR, FCTR, ,  
+.
+
+format SPDETAIL =
+@<<<<<<<<, @#######.##, @#######.##, @#######.##, @##########, @######, @##, @##, @#.##, @##############
+$Command, $RealTime, $CpuSysTime, $CpuUserTime, $CharIO, $DiskIO, $CpuFactor, $HogFactor, $Kcore, $Overall
+.
+
+format SPSUMMARY =
+TOTALS, @#######.##, @#######.##, @#######.##, @##########, @######, @##, @##, @#.##
+$RealTimeTotal, $CpuSysTimeTotal, $CpuUserTimeTotal, $CharIOTotal, $DiskIOTotal, $CpuFactor, $HogFactor, $KcoreTotal
+.
+
+
+# report format
+format top =
+
+              CPU Hogs - for " @<<<<<<<<<<<<<< "
+                                 $GrepString
+
+COMMAND          REAL     ------ CPU SECS ------      CHAR        DISK  CPU   HOG K-CORE       OVERALL
+NAME            (SECS)    SYS               USER       IO          IO  FCTR  FCTR
+------------------------------------------------------------------------------------------------------
+
+.
+
+format DETAIL =
+@<<<<<<<<  @#######.##   @#######.## @#######.##  @##########  @######  @##   @##  @#.## @############
+$Command, $RealTime, $CpuSysTime, $CpuUserTime, $CharIO, $DiskIO, $CpuFactor, $HogFactor, $Kcore, $Overall
+.
+
+format SUMMARY =
+TOTALS     @#######.##   @#######.## @#######.##  @##########  @######  @##   @##  @#.## 
+$RealTimeTotal, $CpuSysTimeTotal, $CpuUserTimeTotal, $CharIOTotal, $DiskIOTotal, $CpuFactor, $HogFactor, $KcoreTotal
+.
+
+$TmpFile = &TmpName();
+$LineCount = 0;
+
+open(SORT, "| sort > $TmpFile") || die "can't open $TmpFile\n";
+
+foreach $File (  @PacctFiles ) {
+	$AcctInputFile = $DefaultDir . $File;
+	# order of options in acctcom is important
+	$RunCmd = "acctcom -hitrkv " . $AcctInputFile . $CutCmd . "|";
+	#print STDERR $RunCmd;
+	open(HOGS, $RunCmd) || die "can't pipe from acctcom\n";
+	# show which file we are using
+	print STDERR "\nreading $AcctInputFile \n";
+	while (<HOGS>) { 
+		# skip the 2 header lines
+		$LineCount++;
+		print SORT;
+		$ReportLine = $LineCount / $ReportInterval;
+		if ( $ReportLine == ( int($LineCount / $ReportInterval) ) ) {
+			print	STDERR $LineCount, "\t";
+		}
+	}
+	close(HOGS);
+	$LineCount = 0;
+
+}
+
+close(SORT);
+
+open(SORT,$TmpFile);
+print SORT "EOF\n";
+close(SORT);
+open(SORT,$TmpFile);
+
+$Overall=0;
+$Command="";
+$OldCommand="";
+$RealTime=0;
+$Kcore=0;
+$CpuUserTime=0;
+$CpuSysTime=0;
+$CharIO=0;
+$DiskIO=0;
+$KcoreTotal=0;
+$DiskIOTotal=0;
+$CharIOTotal=0;
+$RealTimeTotal=0;
+$CpuSysTimeTotal=0;
+$CpuUserTimeTotal=0;
+
+
+# "other" category
+
+$OtherRealTime=0;
+$OtherKcore=0;
+$OtherCpuUserTime=0;
+$OtherCpuSysTime=0;
+$OtherCharIO=0;
+$OtherDiskIO=0;
+
+$HogFactor=0;
+@HogLine="";
+
+$FirstPass = $TRUE;
+
+print STDERR "\nWriting Report ...\n";
+
+
+# force a top of page on first pass of comma delimited
+if ( $opt_c ) { 	# comma delimited format
+	$- = 0;
+	write;
+}
+
+while(<SORT>) {
+
+	@HogLine = split(' ',$_);
+	$Command = &StripRoot( $HogLine[0] );
+
+	# set up for first pass, $OldCommand must have a value
+	if ( $FirstPass == $TRUE ) {
+		$OldCommand = $Command;
+		$FirstPass = $FALSE;
+	}
+	
+	# new command in file - print and reset vars
+
+
+	# default for grep is everything
+	if ( grep( /$GrepString/,@HogLine ) ) {
+		$RealTime 	= $RealTime		+ $HogLine[ 4+$FieldOffset];
+		$CpuSysTime	= $CpuSysTime 	+ $HogLine[ 5+$FieldOffset];
+		$CpuUserTime= $CpuTime 		+ $HogLine[ 6+$FieldOffset];
+		$CharIO		= $CharIO 		+ $HogLine[ 7+$FieldOffset];
+		$DiskIO		= $DiskIO 		+ $HogLine[ 8+$FieldOffset];
+		$Kcore		= $Kcore			+ $HogLine[11+$FieldOffset];
+
+		# print and reset totals
+		if ( $OldCommand ne $Command ) {
+
+			&CalcUsage(); # hog factor - cpu factor
+
+			if ( $opt_o && ( $Overall < $UsageThreshold ) ) { # other
+				
+				$OtherRealTime		= $OtherRealTime		+ $RealTime		;
+				$OtherKcore			= $OtherKcore			+ $Kcore			;	
+				$OtherCpuUserTime	= $OtherCpuUserTime	+ $CpuUserTime	;
+				$OtherCpuSysTime	= $OtherCpuSysTime	+ $CpuSysTime	;
+				$OtherCharIO		= $OtherCharIO			+ $CharIO		;
+				$OtherDiskIO		= $OtherDiskIO			+ $DiskIO		;
+
+			} else {
+				write;
+				print STDERR ".";
+			}
+
+			if ( $opt_c ) { 	# comma delimited format
+				# don't allow formfeed
+				$- = 60;
+			}
+
+			# calc totals
+
+			$RealTimeTotal 	= $RealTimeTotal		+ $RealTime;
+			$CpuSysTimeTotal	= $CpuSysTimeTotal	+ $CpuUserTime;
+			$CpuUserTimeTotal	= $CpuUserTimeTotal	+ $CpuSysTime;
+			$CharIOTotal		= $CharIOTotal 		+ $CharIO;
+			$DiskIOTotal		= $DiskIOTotal 		+ $DiskIO;
+			$KcoreTotal			= $KcoreTotal			+ $Kcore;
+
+			# reset vars per group
+			$RealTime=0;
+			$CpuUserTime=0;
+			$CpuSysTime=0;
+			$CharIO=0;
+			$DiskIO=0;
+			$Kcore=0;
+
+			$OldCommand = $Command;
+
+		}
+	}
+	
+}
+
+
+if ( $opt_o ) { # other
+
+	$Command			= "other" 			 ;
+	$RealTime		= $OtherRealTime	 ;
+	$Kcore			= $OtherKcore		 ;	
+	$CpuUserTime	= $OtherCpuUserTime;
+	$CpuSysTime		= $OtherCpuSysTime ;
+	$CharIO			= $OtherCharIO		 ;
+	$DiskIO			= $OtherDiskIO		 ;
+
+	&CalcUsage();
+
+	if ( $opt_c == 1 ) { 	# comma delimited format
+		# don't allow formfeed
+		$- = 60;
+	}
+
+	# output to report file
+	write;
+
+}
+
+	
+$HogFactor = &ZeroDivide( ( $CpuTimeTotal + $CpuSysTimeTotal ), $RealTimeTotal ) * 100;
+$CpuFactor = &ZeroDivide(  $CpuUserTimeTotal, ( $CpuSysTimeTotal + $CpuUserTimeTotal ) ) * 100;
+
+
+if ( $opt_c == 1 ) { 	# comma delimited format
+	$~ = 'SPSUMMARY';		# format for record
+} else { 
+	$~ = 'SUMMARY';		# format for record
+	print "\n";
+}
+
+if ( $opt_c == 1 ) { 	# comma delimited format
+	# don't allow formfeed
+	$- = 60;
+}
+
+write;
+print STDERR "\n";
+
+close(SORT);
+unlink($TmpFile);
+
+# -- subs below here -- #
+
+sub ZeroDivide {
+	local( $Dividend );
+	if( ( $_[0] != 0 ) && ( $_[1] != 0 ) ) {
+		$Dividend = $_[0] / $_[1];
+	} else {
+		$Dividend = 0;
+	}
+	return $Dividend;
+}
+
+sub handler {	# 1st arg is signal name
+
+	local($sig) = @_;
+	print "\nCaught a SIG$sig - shutting down \n";
+	unlink($TmpFile);
+	exit(1);
+
+}
+
+sub Usage {
+
+	print STDERR "usage:  hogs.prl [ -a ] [ -f <pacctfile> ... ] [ -h ] [ -g ] [ -u ]  \n";
+	print STDERR "   -a = use all available pacct* files \n";
+	print STDERR "   -f = specific pacct file ( don't include path - just file name \n";
+	print STDERR "   -g = grep string \n";
+	print STDERR "   -h = help\n";
+	print STDERR "   -u = sort by user\n";
+	print STDERR "   -o =all lines with usage less than threshold will be grouped with other\n";
+	print STDERR "   -c = use comma delimited format\n\n";
+
+	return;
+}
+
+
+# strips the leading "#" that identifies a process as belonging to super user
+sub StripRoot {
+	local($ProcName, $StripName);
+	$ProcName = $_[0];
+	# remove non-alpha, non-underscore, non-dash
+	( $StripName = $ProcName )  =~ tr/a-zA-Z_-/ /cd ;
+	return ( $StripName );
+}
+
+sub CalcUsage {
+
+	 		# hog factor is CPUTIME / REALTIME
+			# expressed as a percentage
+			$HogFactor	= &ZeroDivide( ( $CpuUserTime + $CpuSysTime ) , $RealTime ) * 100;
+			$CpuFactor	= &ZeroDivide( $CpuUserTime, ( $CpuSysTime + $CpuUserTime ) )  * 100 ;
+			$Overall	= (( $HogFactor + 1 ) * $Kcore ) * ((($CpuSysTime + 1) / ($CpuUserTime + 1) / 1000 ) * ( $DiskIO + 1) * $CpuFactor + 1 );	
+}
+
+

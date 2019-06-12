@@ -1,0 +1,131 @@
+#!/usr/bin/env perl
+
+=head1
+
+	pps - Perl Process Status
+
+	a replacement for the traditional ps command
+	allows you to easily sort by cpu time or current cpu usage
+
+	default is cpu_time
+
+	usage: pps -u <username> -nosleep [ -cpu-pct | -cpu-time ]
+
+	-u        show processes for a user only
+	-cpu-pct  sort by percentage of cpu used
+	-cpu-time sort by cpu time used
+	-nosleep  do not show sleeping processes
+
+	* On Solaris, 2.6 or higher is required
+
+=cut 
+
+use Proc::ProcessTable;
+use Getopt::Long;
+use English;
+
+use vars qw{$opt_nosleep $opt_cpu_pct $opt_help $opt_cpu_time $opt_h $opt_z};
+
+
+my($result) = Getopt::Long::GetOptions(
+	"cpu-time",
+	"cpu-pct",
+	"nosleep",
+	"noheader",
+	"u:s",
+	"z","h","help"
+);
+
+if ( $opt_z or $opt_h or $opt_help ) {
+	Usage();
+	exit;
+}
+
+my $sortField;
+
+$sortField = 'time' ;
+$sortField = 'time'  if defined( $opt_cpu_time );
+$sortField = 'pctcpu'  if defined( $opt_cpu_pct );
+my $printHdr = defined($opt_noheader) ? 0 : 1;
+
+#                                              cpu  pct  
+#              user pid  ppid tty  stat  strt  time cpu rss  cmd
+$HDR_FORMAT = "%-8s %-5s %-5s %-7s %-11s %-24s %-8s %8s %9s %s\n";
+    $FORMAT = "%-8s %-5s %-5s %-7s %-11s %-24s %-8s %5.1f %9s %s\n";
+
+$pt=new Proc::ProcessTable;
+if ($printHdr) {
+	#printf($HDR_FORMAT,     "",   "",    "",   "",    "",     "", "CPU",     "",   "", "");
+	printf($HDR_FORMAT, "USER","PID","PPID","TTY","STAT","START","CPU TIME","\%CPU","RSS","COMMAND");
+}
+
+my @ps;
+my %psKeys;
+
+my $psKey=0;
+
+# ProcessTable documentation says that linux time is in microseconds
+# but experimentation shows it to be in milliseconds
+# all others unixes that I'm familiar with are in seconds
+$timeFactor = $OSNAME == 'linux' ? 1000 : 1;
+
+for $p ( @{$pt->table} ) {
+
+	next if $opt_nosleep and $p->state eq 'sleep';
+	next if $opt_u and (getpwuid($p->uid))[0] ne $opt_u;
+
+	my $factoredTime = $p->time / $timeFactor;
+	my $cmd=$p->cmndline;
+	my $x= $p->time;
+
+	my $h = int($factoredTime/3600);
+	my $m = int( ($factoredTime - ($h*3600) ) / 60);
+	my $s = int($factoredTime - ($h*3600) - ($m*60));
+
+	push @ps, [
+		(getpwuid($p->uid))[0],
+		$p->pid,
+		$p->ppid,
+		substr($p->ttydev,index($p->ttydev,'/',1)+1),
+		$p->state,
+		scalar(localtime($p->start)),
+		substr('00000'.$h,-5,5) . ':' . substr('00'.$m,-2,2) . ':' . substr('00'.$s,-2,2),
+		$p->pctcpu,
+		$p->rss,
+		$p->cmndline];
+	
+	 if ( $sortField eq 'time' ) { $psKeys{$psKey++} = $p->time }
+	 elsif ( $sortField eq 'pctcpu' ) { $psKeys{$psKey++} = $p->pctcpu }
+	 else { Usage(); die }
+
+}
+
+# sort the desired field and put in an array
+# the values stuffed in the array are the indices from 
+# the loop above, shuffled to be in the order so that 
+# the appear in the same order as the sorted field
+#
+@psSort = sort { $psKeys{$a} <=> $psKeys{$b} } keys %psKeys;
+
+# print the ps output
+for $idx ( @psSort ) { printf( $FORMAT, @{$ps[$idx]} ) }
+
+sub Usage {
+	print qq/
+
+   pps - Perl ps
+         sort ps output by %cpu or cpu_time
+         default is cpu_time
+
+         usage: pps -u <username> -nosleep [ -cpu-pct | -cpu-time ]
+
+         -u        show processes for a user only
+         -cpu-pct  sort by percentage of cpu used
+         -cpu-time sort by cpu time used
+         -nosleep  do not show sleeping processes
+
+         * On Solaris, 2.6 or higher is required
+
+/;
+}
+

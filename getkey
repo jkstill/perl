@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+
+$old_stty = `stty -g`;
+system "stty", 'cbreak',
+system "stty", 'eol', ''; # note: real control A
+system "stty -echo";
+
+$key = getc(STDIN);
+system "stty $old_stty";
+

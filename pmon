@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+
+$delay = 10;
+$forever = 1;
+$threshold = 1;
+$usage = "Usage: $0 [ -d delay ] [ -l loopcount ] [ -t threshole ]
+      -d delay          Wait delay seconds between samples
+      -l loopcount      Maximum loop count
+      -t threshold      CPU time change threshold\n";
+
+require 'ctime.pl';
+require 'newgetopt.pl';
+
+&NGetOpt('d:n','l:n','t:n') || die "$usage";
+
+if ( $opt_d) { $delay = $opt_d; } 
+if ( $opt_l) { $loopcmt = $opt_l; $forever = 0; }
+if ( $opt_t) { $threshold = $opt_t; }
+
+
+if ( $#ARGV != -1 ) {
+	die " Invalid command line argument: @ARGV\n$usage";
+}
+
+$ps = 'ps -ef'; $stime = 4; $cputime = 6;
+
+print "    Process Monitor Program - Version 3.0 - Tim Wilson\n";
+
+open (PS,"$ps|") || die "Exiting, cannot execute $ps: $!\n";
+
+$_ = <PS>; 	#discard header line
+
+while (<PS>) {
+	chop;
+	@Fld = split(' ');
+	&get_cpu_time;
+	$PSLIST1{$Fld[1]} = $ncpusec;
+}
+
+close(PS);
+
+# neat trick!
+while ( $loopcnt-- || $forever) {
+	sleep $delay;
+	print &ctime(time);
+	open (PS,"$ps|") || die "Exiting, cannot execute $ps: $!\n";
+	chop ( $header = <PS>);
+	$ShowHdr = 1;
+	while (<PS>) {
+		chop;
+		@Fld = split(' ');
+		&get_cpu_time;
+		$PSLIST2{$Fld[1]} = $ncpusec;
+		$ocpusec = $PSLIST1{$Fld[1]};
+		$diffcpu = $ncpusec - $ocpusec;
+		if ( $diffcpu > $threshold && $ShowHdr ) {
+			$ShowHdr = 0;
+			print "USAGE $header \n";
+			printf("%3d    %s\n",$diffcpu, $_);
+		}
+	}
+	undef %PSLIST2;
+}
+
+sub get_cpu_time {
+
+	if ($Fld[$stime] =~ /\d+:\d\d/ ) { # stime matches [h...]h:mm
+		($cpumin, $ncpusec ) = split ( ':', $Fld[$cputime], 2);
+		$ncpusec += ( $cpumin * 60 ) ;
+	} else { # otherwise, assume stime is on mon day
+		($cpumin, $ncpusec ) = split ( ':', $Fld[$cputime+1], 2);
+		$ncpusec += ( $cpumin * 60 ) ;
+		
+	}
+}

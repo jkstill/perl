@@ -1,0 +1,117 @@
+#!/usr/bin/env perl
+
+=head1 alarm_demo
+
+Alarm is set for 2 seconds.
+
+Input on the ccommand is for the number of seconds to sleep
+Default sleep time is 3 seconds
+
+Note that the built in alarm mechanism is not too accurate when using sleep() to test, as alarm() is implemented with sleep()
+
+The sleep time in this test must exceed the alarm time by 3 seconds before it is caught.
+
+See alarm_demo_posix for an example that is more accurate
+
+The documention for POSIX claims that POSIX alarm() and sleep() are identical to those found in standard Perl.
+
+However as per the demo, they do not seem affected by the same race condition seen in this demo.
+
+
+ ~/perl $ perl alarm_demo
+
+ Alarm is set for 2 Seconds
+ Sleep is set for 3 Seconds
+
+ sleeping...
+ continuing normally via continueProgram
+ Exiting normally
+
+
+ ~/perl $ perl alarm_demo 2
+
+ Alarm is set for 2 Seconds
+ Sleep is set for 2 Seconds
+
+ sleeping...
+ continuing normally via continueProgram
+ Exiting normally
+
+
+ ~/perl $ perl alarm_demo 3
+
+ Alarm is set for 2 Seconds
+ Sleep is set for 3 Seconds
+
+ sleeping...
+ continuing normally via continueProgram
+ Exiting normally
+
+
+ ~/perl $ perl alarm_demo 4
+ 
+Alarm is set for 2 Seconds
+ Sleep is set for 4 Seconds
+ 
+ sleeping...
+ continuing normally via continueProgram
+ Exiting normally
+
+
+ ~/perl $ perl alarm_demo 5
+
+ Alarm is set for 2 Seconds
+ Sleep is set for 5 Seconds
+
+ sleeping...Performing Alarm Action
+
+ alarm exceeded - exiting via exitProgram
+
+
+
+=cut
+
+use warnings;
+use strict ;
+
+$|=1; # do not buffer output
+
+my $globalAction=\&continueProgram;
+
+my $alarmTime = 2;
+my $sleepTime = $ARGV[0];
+
+$sleepTime = 3 unless $sleepTime;
+
+print qq{
+
+Alarm is set for $alarmTime Seconds
+Sleep is set for $sleepTime Seconds
+
+};
+
+
+{
+	$SIG{ALRM}=\&sigAlarm;
+	alarm(5);
+	print "sleeping..."; 
+	sleep($sleepTime);
+	&$globalAction;
+	print "Exiting normally\n";
+
+}
+
+
+sub sigAlarm {
+	print "Performing Alarm Action\n";
+	$globalAction = \&exitProgram;
+	return 0;
+}
+
+sub exitProgram {
+	print "\nalarm exceeded - exiting via exitProgram\n";
+	exit;
+}
+
+sub continueProgram { print "\ncontinuing normally via continueProgram\n" }
+

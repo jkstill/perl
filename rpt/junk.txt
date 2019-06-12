@@ -1,0 +1,881 @@
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 6,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'COMM',
+                                 'OWNER' => 'SCOTT',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 1
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => 'BONUS',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                                COMM          6
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 6,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'JOB',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 1,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                                 JOB          6
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 8,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'SAL',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                                 SAL          8
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 20,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'ENAME',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                               ENAME         20
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 4,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'AVG_SAL_DEPT',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => 'AVG_SALARY_VIEW',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                        AVG_SAL_DEPT          4
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 2,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'DEPTNO',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                              DEPTNO          2
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 2000,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'BINARY_DATA',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => 'BINCOL_TEST',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                         BINARY_DATA       2000
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 2000,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'CLEAR_TEXT',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                          CLEAR_TEXT       2000
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 12,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'COMMENT_STATUS_PK',
+                                 'OWNER' => 'PRJSTAT',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 1,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => 'STATUS_HISTORIES',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                   COMMENT_STATUS_PK         12
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 12,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'PERSON_PK',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 1,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                           PERSON_PK         12
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 12,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'COMMENT_MILESTONE_PK',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                COMMENT_MILESTONE_PK         12
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 1,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'STATUS',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                              STATUS          1
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 7,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'STATUS_DATE',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                         STATUS_DATE          7
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 12,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'PROJECT_PK',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                          PROJECT_PK         12
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 12,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'COMMENT_RISK_PK',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                     COMMENT_RISK_PK         12
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 12,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'PERSON_PK',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => 'PROJECT_TEAMS',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                           PERSON_PK         12
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 12,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'COMMENT_PK',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                          COMMENT_PK         12
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 30,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'MEMBER_COMMENTS',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => 'PROJECT_VIEW',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                     MEMBER_COMMENTS         30
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 20,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'MEMBER_NAME',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                         MEMBER_NAME         20
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 50,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'PROJECT_NAME',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                        PROJECT_NAME         50
+Dumper: $VAR1 = bless( {
+                 '_linesize' => 100,
+                 '_sth' => undef,
+                 '_break_columns' => [
+                                       'OWNER',
+                                       'TABLE_NAME'
+                                     ],
+                 '_hashref' => {
+                                 'COLUMN_SIZE' => 50,
+                                 '_linesize' => 100,
+                                 '_sth' => undef,
+                                 '_break_columns' => $VAR1->{'_break_columns'},
+                                 '_hashref' => $VAR1->{'_hashref'},
+                                 '_compute_columns' => {
+                                                         'OWNER' => 'COLUMN_SIZE',
+                                                         'TABLE_NAME' => 'COLUMN_SIZE'
+                                                       },
+                                 '_columns' => {
+                                                 'COLUMN_SIZE' => '@######.##',
+                                                 'COLUMN_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'OWNER' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                                 'TABLE_NAME' => '@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                                               },
+                                 'COLUMN_NAME' => 'PROJECT_COMMENTS',
+                                 'OWNER' => '',
+                                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                                 '_break_detected' => {
+                                                        'OWNER' => 0,
+                                                        'TABLE_NAME' => 0
+                                                      },
+                                 '_pagesize' => 60,
+                                 'TABLE_NAME' => '',
+                                 '_break_detector' => 'Tie::RPT::BreakDetector'
+                               },
+                 '_compute_columns' => $VAR1->{'_hashref'}{'_compute_columns'},
+                 '_columns' => $VAR1->{'_hashref'}{'_columns'},
+                 '_compute_detector' => 'Tie::RPT::ComputeHandler',
+                 '_pagesize' => 60,
+                 '_break_detector' => 'Tie::RPT::BreakDetector'
+               }, 'Tie::RPT' );
+
+                                    PROJECT_COMMENTS         50

@@ -1,0 +1,128 @@
+#!/usr/bin/perl
+
+# show the system load on the current machine
+# the "-l" option will log it to a file
+
+# make sure perl can find my perl library files
+$MACHINE=`uname -n `;
+chop $MACHINE;
+push(@INC,"/usr1$MACHINE/jared/perl/");
+
+require "newgetopt.pl";
+require "trim.pl";
+require "tmpname.pl";
+require "convdate.pl";
+require "currtime.pl";
+
+$Threshold=5;
+
+# process command line args
+$OptError = &NGetOpt('l','d');
+
+# -l logging
+# -d debug
+
+if ($OptError == 0 ) {
+	print STDERR "error in command line \n";
+	exit(1);
+}
+
+
+format SORTDETAIL =
+@>>>>>>> @<<<<<<<<<<< @<<<<<<<  @#### @####  @## @####  @>>>>>>>  @>>>>>>>  @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+$SortTime, $Date, $UserID, $PID, $PPID, $Nice, $Size, $STime, $CPUTime, $CMD
+.
+
+format DETAIL =
+@>>>>>>>>>>> @<<<<<<<< @#### @####  @## @####  @>>>>>>> @>>>>>>> @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+$Date, $UserID, $PID, $PPID, $Nice, $Size, $STime, $CPUTime, $CMD
+.
+
+open(RUPTIME, "/usr/bin/ruptime |") || die "Could not run ps: $!\n";
+if ($opt_l == 1 ) {
+	open(LOG,">>/usr1$MACHINE/df/log/hiload.log") || die "cannot open log file\n"; 
+}
+
+while (<RUPTIME>) {
+	if (/$MACHINE/) { $out = $_; }
+}
+$Date = `date +%y%m%d%H%M%S`;
+chop $Date;
+
+# if running in logging mode, don't print the load info
+# it will show up in your mail if begin run by cron
+
+if (! $opt_l ) { print &ConvDate($Date)," - ", $out; }
+
+if ($opt_l == 1 ) { 
+
+	print LOG $Date," - ", $out; 
+
+	# if the load is GT $Threshold, send me mail
+	# only do so if the logging option was specified, since this is how
+	# it is run from cron
+
+	( $a,$b,$c,$d,$e,$f,$SYSLOAD ) = split(/\s/,&AllTrim($out));
+
+	if ( $SYSLOAD >= $Threshold ) {
+
+		open(PSLOG,">>/usr1$MACHINE/df/log/hiload2.log") || die "cannot open log file\n"; 
+
+		$TmpFile=&TmpName();
+		open(SORT,"| sort -r > $TmpFile " ) || die "can't open sort: $! \n";
+
+		$CurrTime = &CurrTime();
+		#`echo "System Load is at $SYSLOAD as of $CurrTime !" | mail jared `;
+		`echo "System Load is at $SYSLOAD as of $CurrTime !" | elm -s HILOAD jared `;
+		open(PS,"ps -fle |") || die "Could not run ps: $!\n";
+		while(<PS>){
+			@tmpstr = split(/\s/,&AllTrim($_));
+			# ps command will report STIME as a time "HH:MM:SS" or as a date
+			# "Jan 16" if it is over 24 hours old
+			$_ = $tmpstr[11];
+			# look for a colon in STIME field; no defunct processes
+			if ( ! /:/ && ( ! grep(/defunct/,@tmpstr)) && ( ! grep(/STIME/,@tmpstr)) ) {
+					if ( $opt_d ) {
+						local($,);
+						$,=" ";
+						print @tmpstr;
+					}
+				# MONTHLY format
+				$tmpstr[11]=$tmpstr[11] . "_" . $tmpstr[12];
+				splice(@tmpstr,12,1); # remove $tmpstr[12]
+
+				if ( ! /:/ && ( ! grep(/defunct/,@tmpstr)) && ( ! grep(/STIME/,@tmpstr))  && $opt_d) {
+					local($,);
+					$,=" ";
+					print @tmpstr,"\n";
+				}
+				
+				($x,$x,$UserID,$PID,$PPID,$x,$x,$Nice,$x,$Size,$x,$STime,$x,$CPUTime,$CMD,$CMD2,$CMD3,$CMD4,$CMD5) = @tmpstr;
+				$CMD = $CMD . " " . $CMD2 . " " . $CMD3 . " " . $CMD4 . " " . $CMD5;
+				$SortTime = $CPUTime;
+				select(SORT);
+				$~ = 'SORTDETAIL';    # detail line
+				write(SORT);
+
+			}
+		}
+
+		# write the top 5 users of CPU time to the log file
+		close(SORT);
+		open(SORT,"<$TmpFile") || die "cannot reopen $TmpFile: $!\n";
+		$counter=0;
+		while (<SORT>) {
+			($x,$Date,$UserID,$PID,$PPID,$Nice,$Size,$STime,$CPUTime,$CMD,$CMD2,$CMD3,$CMD4,$CMD5) = split(/\s/,&AllTrim($_));
+			$CMD = $CMD . " " . $CMD2 . " " . $CMD3 . " " . $CMD4 . " " . $CMD5;
+			select(PSLOG);
+			$~ = 'DETAIL';    # detail line
+			write(PSLOG);
+			$counter++;
+			last if ( $counter > 4 );
+		}
+		close(SORT);
+	}
+	unlink($TmpFile);
+
+}
+

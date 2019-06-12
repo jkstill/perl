@@ -1,0 +1,195 @@
+#!/home/oracle/perl/bin/perl 
+
+# maxext3
+# find objects in the specified database that
+# are either near maxextents, or will not have
+# enough room in the tablespace to extend
+# 
+# may be run as the oracle account
+# master copy in $HOME/jkstill/perl
+#
+
+use FileHandle;
+use DBI;
+use strict;
+no strict 'vars';
+use warnings;
+
+use Carp;
+require Addresses;
+use Getopt::Long;
+
+our %optctl = ();
+
+Getopt::Long::GetOptions(
+	\%optctl, 
+	"database=s",
+	#"username=s",
+	#"password=s",
+	"silent!",
+	"z","h","help");
+
+our($db, $username, $password);
+
+if ( ! defined($optctl{database}) ) {
+	Usage();
+	die "database required\n";
+}
+$db=$optctl{database};
+
+#if ( ! defined($optctl{username}) ) {
+	#Usage();
+	#die "username required\n";
+#}
+
+#$username=$optctl{username};
+#$password = $optctl{password};
+
+# get username and password
+use karmatab;
+
+$username=$karmatab::instances{lc($db)}->[0];
+$password=$karmatab::instances{lc($db)}->[1];
+
+
+our $dbh = DBI->connect(
+	'dbi:Oracle:' . $db, 
+	$username, $password, 
+	{ RaiseError => 1, AutoCommit => 0 } 
+	);
+
+die "Connect to  $db failed \n" unless $dbh;
+
+our $maxExtSql= qq{select
+	s.owner segment_owner
+	, s.segment_name
+	, s.segment_type
+	, s.tablespace_name
+	, s.extents extent_count
+	, decode( sign( 100000 - s.max_extents),
+		-1, lpad('UNLIMITED',14),
+		0, lpad('UNLIMITED',14),
+		1, to_char(s.max_extents,'9,999,999,999')
+	) max_extents
+	, decode( sign( 100000 - ( s.max_extents - s.extents ) ),
+		-1, lpad('UNLIMITED',14),
+		0, lpad('UNLIMITED',14),
+		1, to_char(s.max_extents - s.extents, '9,999,999,999')
+	) num_extents_available
+	, s.next_extent
+	, f.max_bytes_free
+from dba_segments s, 
+(
+	select t.tablespace_name, max(nvl(f.bytes,0)) max_bytes_free
+	from dba_free_space f, dba_tablespaces t
+	where t.tablespace_name = f.tablespace_name(+)
+	group by t.tablespace_name
+) f
+where s.tablespace_name = f.tablespace_name
+	and 
+	(
+		(s.max_extents - s.extents) < 3
+		or 
+		s.next_extent > f.max_bytes_free
+	)
+	and segment_type in ('TABLE','INDEX')
+order by 1,2,3
+
+};
+
+
+our $sth = $dbh->prepare($maxExtSql);
+
+use vars qw($rv);
+our $rv = $sth->execute || die "error with statement $maxExtSql \n";
+
+my @rpt = undef;
+my $txt = undef;
+
+while( my $ary = $sth->fetchrow_hashref ) {
+	$txt = sprintf("%15s  %30s   %10s  %15s  %15s  %15d"
+		, $ary->{SEGMENT_OWNER}
+		, $ary->{SEGMENT_NAME}
+		, $ary->{SEGMENT_TYPE}
+		, $ary->{NUM_EXTENTS_AVAILABLE}
+		, $ary->{NEXT_EXTENT}
+		, $ary->{MAX_BYTES_FREE}
+	);
+	print "$txt\n" unless $optctl{silent};
+	push @rpt, $txt if defined($txt);
+}
+
+if ( @rpt ) {
+	$txt = sprintf("%15s  %30s  %10s  %15s  %15s  %15s"
+		, "Owner:"
+		, "Segment:"
+		, "Type:"
+		, "Extents Avail:"
+		, "Next Extent:"
+		, "Bytes Avail:"
+	);
+
+	unshift @rpt, $txt;
+
+	my $subject = "Low Space Report for $optctl{database} at " . GetTimestamp();
+	no warnings;
+	email(\@Addresses::dba, join("\n",@rpt), $subject);
+}
+
+$sth->finish;
+$dbh->disconnect;
+
+
+sub Usage {
+	print "\n";
+	print "usage:  maxext3\n";
+	print "    maxext3 -database dv07  [-silent] \n";
+	print "\n";
+}
+
+
+sub email {
+
+	use Mail::Sendmail;
+
+	no warnings;
+	my ($addressRef, $msg, $subject) = @_;
+	$subject = "Low Space Report for $optctl{database} at " . GetTimestamp() unless $subject;
+	my %mail = (
+		To => join(',', @$addressRef),
+		From => $Addresses::from,
+		Subject => $subject,
+		Message =>  $msg,
+		smtp => $Addresses::smtpServer
+		);
+
+	sendmail(%mail) or croak $Mail::Sendmail::error;
+
+}
+
+sub GetTimestamp {
+
+	my($sec,$min,$hours,$mday,$mon,$year)=localtime;
+	$mon++;
+
+	$mon = '000'. ${mon};
+	$mon =~ s/^(.*)(..)$/$2/;
+
+	$mday = '000'. ${mday};
+	$mday =~ s/^(.*)(..)$/$2/;
+
+	$hours = '000'. ${hours};
+	$hours =~ s/^(.*)(..)$/$2/;
+
+	$min = '000'. ${min};
+	$min =~ s/^(.*)(..)$/$2/;
+	
+	$sec = '000'. ${sec};
+	$sec =~ s/^(.*)(..)$/$2/;
+
+	$year+=1900;
+
+	my($timestamp) = "$mon/$mday/$year - $hours:$min:$sec";
+
+	return $timestamp;
+}

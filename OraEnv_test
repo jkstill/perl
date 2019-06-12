@@ -1,0 +1,73 @@
+#!/home/oracle/perl -w
+
+use strict;
+use DBI;
+#use lib '/home/jkstill/oracle/OraEnv';
+use OraEnv;
+no strict 'vars';
+
+my($db, $username, $password);
+
+$db='dv02';
+$username='system';
+$password = OraEnv::GetPassWord($db,$username);
+
+#print "$password\n";
+
+print "BEFORE:\n";
+print "ORACLE_SID : $ENV{'ORACLE_SID'}\n" if defined($ENV{'ORACLE_SID'});
+print "ORACLE_HOME: $ENV{'ORACLE_HOME'}\n" if defined($ENV{'ORACLE_HOME'});
+print "ORACLE_BASE: $ENV{'ORACLE_BASE'}\n" if defined($ENV{'ORACLE_BASE'});
+print "TNS_ADMIN  : $ENV{'TNS_ADMIN'}\n" if defined($ENV{'TNS_ADMIN'});
+print "LD_LIBRARY_PATH  : $ENV{'LD_LIBRARY_PATH'}\n" if defined($ENV{'LD_LIBRARY_PATH'});
+
+OraEnv::SetEnv($db);
+
+$dbh = DBI->connect('dbi:Oracle:' . $db, $username, $password, { RaiseError => 1 } );
+$dbh->disconnect;
+
+print "AFTER:\n";
+print "ORACLE_SID : $ENV{'ORACLE_SID'}\n";
+print "ORACLE_HOME: $ENV{'ORACLE_HOME'}\n";
+print "ORACLE_BASE: $ENV{'ORACLE_BASE'}\n";
+print "TNS_ADMIN  : $ENV{'TNS_ADMIN'}\n";
+print "LD_LIBRARY_PATH  : $ENV{'LD_LIBRARY_PATH'}\n" ;
+
+# test the GetInstanceList stuff
+
+$instancelist = OraEnv::SetInstanceListName();
+
+print "$instancelist\n";
+
+
+@InstanceList=();
+OraEnv::GetInstanceList(\@InstanceList);
+for $i ( 0 .. $#InstanceList ) {
+	print "$InstanceList[$i]\n";
+}
+
+%InstanceList=();
+OraEnv::GetInstanceList(\%InstanceList);
+for $key ( keys %InstanceList ) {
+	print "KEY: $key  VALUE: $InstanceList{$key}\n";
+}
+
+@InstanceList=();
+OraEnv::GetInstanceList(\@InstanceList,'ALL');
+for $i ( 0 .. $#InstanceList ) {
+	print "$InstanceList[$i]\n";
+}
+
+%InstanceList=();
+OraEnv::GetInstanceList(\%InstanceList,'ALL');
+for $key ( keys %InstanceList ) {
+	print "KEY: $key  VALUE: $InstanceList{$key}\n";
+}
+
+# test GetDbaMailList
+my @dbaMailList=();
+OraEnv::GetDbaMailList(\@dbaMailList);
+foreach $dba ( @dbaMailList ) {
+	print "DBA ADDRESS: $dba\n"
+}
+

@@ -1,0 +1,74 @@
+#!/usr/bin/perl
+
+$charpos=0;
+$line_delimit = 0;
+$LINE_FEED = 10;
+$CARRIAGE_RETURN = 13;
+$records_same_length=1;
+
+$file = shift || die &main::usage;
+
+# determine if line delimited or a flat file
+
+
+@rec_lengths=();
+$linecount=0;
+
+$charcount=0;
+$char_per_line = 0;
+$linecount=0;
+
+open(FILE,$file) || die "cannot open that file - $! \n";
+
+while ( read FILE, $char, 1 )
+{
+
+	last if $charcount++ > 1000;
+
+	$char_ascii = ord($char);
+	#print "$char_ascii ";
+	
+	next if  $CARRIAGE_RETURN == $char_ascii ;
+	if ( $LINE_FEED == $char_ascii )
+	{ 
+		@rec_lengths[$linecount++]=$char_per_line;
+		$char_per_line=0;
+		next;
+	}
+
+	$char_per_line++;
+
+}
+
+if ( $linecount > 0 )
+{
+	$line_delimit = 1;
+
+	$line_len_chk = @rec_lengths[0];
+
+	for $char_per_line ( @rec_lengths )
+	{
+		#print $char_per_line,"\n";
+		if ( $char_per_line != $line_len_chk ) { $records_same_length = 0; last }
+		$line_len_chk = $char_per_line;
+	}
+}
+
+if ( $line_delimit ) 
+{ 
+	print "$file is line delimited\n" ;
+	if ( $records_same_length ) { print "record length is $rec_lengths[0]\n" }
+	else { print "records are of unequal lengths\n" }
+
+}
+else { print "$file is a flat file\n" }
+
+close(FILE);
+
+sub usage
+{
+	print "filetype: determines if a file is line delimited or flat\n";
+	print "usage: filetype <filename> \n";
+	exit 1;
+}
+

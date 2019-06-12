@@ -1,0 +1,43 @@
+From: khera@cs.duke.edu (Vivek Khera)
+Subject: Re: timing problem with $SIG{'CHLD'}
+Date: 8 Dec 92 22:42:19 GMT
+Organization: Duke University CS Dept., Durham, NC
+Lines: 42
+
+lusol@Lehigh.EDU (Stephen O. Lidie) writes:
+   I suggest simply ignoring the child - works perfectly for me:
+
+   $SIG{'CHLD'} = 'IGNORE';
+
+but does it actually reap the zombies?  when i tried this, i was left
+with bunches of them lying around.  i ended up going with a "polling"
+approach to this:
+
+$WNOHANG = 1;                   # don't let waitpid block
+for(;;) {
+  accept(NS,S) || die "accept: $!\n";
+
+  FORK: {
+    if ($cpid = fork()) {       # parent
+      close(NS);
+      # reap some children.  SIGCHLD = IGNORE is a big fat lie.
+      while (1) { last if (waitpid(-1,$WNOHANG) < 1); }
+    } elsif (defined $cpid) {   # child
+      # process registration here
+      exit(0);
+    } elsif ($! =~ /No more process/) { # EAGAIN is recoverable
+      sleep 2;
+      redo FORK;
+    } else {                    # wierd fork error
+      die "Could not fork child to handle registration!!!: $!\n";
+    }
+  }
+}
+
+which is a pared-down snippet of code from an actual daemon server of
+mine.  it works for me since i get many connections during the time
+the server runs, so it leaves at most one zombie around.
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Vivek Khera, Gradual Student/Systems Guy  Department of Computer Science
+Internet:   khera@cs.duke.edu             Box 90129
+            (MIME mail accepted)          Durham, NC 27708-0129 (919)660-6528

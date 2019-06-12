@@ -1,0 +1,65 @@
+#!/opt/share/oracle/bin/perl -w
+
+
+use Getopt::Long;
+
+%optctl = ();
+
+GetOptions(\%optctl,
+	"user=s",
+	"header!",
+	"help",
+	"debug!"
+);
+
+die "Please use  '-user <username>' \n" unless $optctl{user};
+
+my $PAGESIZE='/usr/bin/pagesize';
+my $pagesize = qx{$PAGESIZE};
+my $kbyte = 1024;
+my $megabyte = 2**20;
+
+my $PS=qq{ps -lu$optctl{user} -o pid -o osz -o rss -o args};
+my $HDR=
+
+#                                                 cpu  pct
+#                 pid  osz rss used cmd
+my $HDR_FORMAT = "%5s %7s %7s %7s %s\n";
+my     $FORMAT = "%5s %7s %7s %7s %s\n";
+my $FLOAT_FORMAT = "%5.2f";
+
+open(PS,"$PS |" ) || die "cannot open $PS - $!\n";
+
+# set header to default to on if not set
+$optctl{header} = defined($optctl{header}) ? $optctl{header} : 1;
+
+if ( $optctl{header} ) {
+	printf("$HDR_FORMAT","PID","OSZ","RSS","USED","CMD");
+	printf("$HDR_FORMAT","","MEG","MEG","MEG","");
+}
+
+while(<PS>){
+
+	# skip header
+	next if /RSS/;
+	s/^\s+//;
+	my  ($pid, $osz, $rss, $megUsed, @cmd);
+
+	@_=split(/\s+/);
+	$pid = shift @_;
+	$osz = shift @_; $osz = sprintf("$FLOAT_FORMAT",$osz *= ( $pagesize / $megabyte ));
+	$rss = shift @_; $rss = sprintf("$FLOAT_FORMAT",$rss *= ( $kbyte / $megabyte ));
+	@cmd = @_;
+	$megUsed = sprintf("$FLOAT_FORMAT",$osz - $rss);
+
+	printf("$FORMAT", $pid, lpad($osz,7), lpad($rss,7), lpad($megUsed,7), join(' ',@cmd) );
+
+}
+
+sub lpad {
+	my($string, $length, $padchar) = @_;
+	$padchar = ' ' unless $padchar;
+	my $padstr = $padchar x 80;
+	return substr($padstr,0,$length - length($string)) . $string;
+}
+
