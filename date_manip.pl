@@ -2,11 +2,12 @@
 
 use Date::Manip;
 
-my $date = '3-Oct-03 19:41:23';
+my $date = '3-Oct-03 19:41:23.456012';
 
 my $rawdate = ParseDate($date);
+print "raw: $rawdate\n";
 
-my $wdate = UnixDate($rawdate,'%Y-%m-%d %H:%M:%S');
+my $wdate = UnixDate($rawdate,'%Y-%m-%d %H:%M:%S.%FF');
 
 print "wdate: $wdate\n";
 

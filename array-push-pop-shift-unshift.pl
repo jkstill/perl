@@ -18,7 +18,7 @@ my $r = pop @a;
 pout('pop', \@a);
 
 # initialize
-my @a=(0,1);
+@a=(0,1);
 pout('initialize', \@a);
 
 # unshift onto beginning of array

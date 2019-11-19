@@ -33,3 +33,35 @@ setArray(\@a);
 
 print "\nArray :\n", Dumper(\@a);
 
+my $history = AddHash->new( 'params' => \%h );
+
+$history->add_params( ( 'four' => 4, 'five' => 5, 'six' => 6 ));
+
+print "\nHashOBJ :\n", Dumper($history);
+
+package AddHash;
+
+use strict;
+use warnings;
+
+use Carp;
+use Data::Dumper;
+
+sub new {
+    my ( $class, %arg ) = @_;
+
+    $arg{timestamp} = time;
+    $arg{date}      = gmtime;
+
+    my $self = bless \%arg, $class;
+
+    return $self;
+}
+
+sub add_params {
+    my ( $self, %params ) = @_;
+
+	 # a clever method to insert a hash into another hash
+	 @{ $self->{params} }{ keys %params } = values %params;
+}
+

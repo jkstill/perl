@@ -1,4 +1,4 @@
-#!/home/oracle/perl  -w
+#!/usr/bin/env perl
 
 # ldf - shows df data for local drives only ( no : in them )
 #       then totals the numbers
