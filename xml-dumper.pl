@@ -7,6 +7,8 @@ use XML::Dumper;
 use XML::Twig;
 
 
+=head1
+
 print qq{
 
 This script needs work, as it currently does not work properly
@@ -14,6 +16,8 @@ This script needs work, as it currently does not work properly
 };
 
 exit;
+
+=cut
 
 
 my $xmlFile=$ARGV[0];
@@ -24,11 +28,11 @@ die "which XML file?\n" unless defined $xmlFile;
 
 my $twig= XML::Twig->new;
 #my $xml = $twig->parsefile( $xmlFile )->simplify();
-my $xml = $twig->parsefile( $xmlFile );
+my $perl = $twig->parsefile( $xmlFile );
 
-my $perl = xml2pl( $xml );
 #print Dumper($perl);
 
-#$twig->print;
+
+$twig->print;
 
 

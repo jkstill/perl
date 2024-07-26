@@ -16,11 +16,17 @@ but the script continues.
 If using DBD::Oracle 1.28 or later, the ora_connect_with_default_signals 
 connection attribute can be used to correct this.
 
+If using the Perl that is installed with Oracle, DBD::Oracle version 1.28 is installed with Oracle 12.1.0.2.
+
+Oracle versions earlier than that will need to use the save and restore handles method.
+
 With older versions of DBD::Oracle you will need to either
 save/restore the signal handlers, or install your own.
 
 =cut
 
+use warnings;
+use strict;
 use Data::Dumper;
 
 # get a copy of signal handlers to

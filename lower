@@ -1,4 +1,4 @@
-#!/home/oracle/perl -pi.baq 
+#!/usr/bin/perl -pi.baq
 
 	if ( index($0,'upper') >= $[ ) {
 		$_ =~ tr/a-z/A-Z/;

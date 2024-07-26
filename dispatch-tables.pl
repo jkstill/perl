@@ -25,12 +25,13 @@ use Data::Dumper;
 
 %ref_actions = (
 	ok => \&ok,
-	warn => \&warn,
+	#warn => \&warn,
+	warn => sub{print "Warning\n"; exit 1},
 	error => \&error
 );
 
 #$ref_actions{ok}();
-#$ref_actions{warn}();
+$ref_actions{warn}();
 $ref_actions{error}();
 
 sub ok {print "OK\n"; exit 0};

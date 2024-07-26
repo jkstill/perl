@@ -22,8 +22,6 @@ my %t = (
 	 $PRINTOK => \&printok,
 );
 
-#print Dumper(\%t);
-
 my @messages=qw[ four five six ];
 
 $t{$PRINTOK}(
@@ -52,7 +50,11 @@ $t{$PRINTWARN}(
 
 print q{=} x $HDRLEN, qq{\n};
 
-$t{$PRINTWARN}();
+print "calling PRINTWARN\n";
+
+$t{$PRINTWARN}(['This is your final warning']);
+
+print Dumper(\%t);
 
 # end of main
 

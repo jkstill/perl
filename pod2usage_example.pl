@@ -3,13 +3,13 @@
 use Getopt::Long;
 use Pod::Usage;
 
-my $man = 0;
-my $help = 0;
 ## Parse options and print usage if there is a syntax error,
 ## or if usage was explicitly requested.
-GetOptions('help|?' => \$help, man => \$man) or pod2usage(2);
-pod2usage(1) if $help;
-pod2usage(-verbose => 2) if $man;
+GetOptions(
+	'help|?!' => sub { pod2usage( -verbose => 1 ) },
+	'man!' => sub { pod2usage( -verbose => 2 ) }
+)
+or pod2usage(2);
 
 ## If no arguments were given, then allow STDIN to be used only
 ## if it's not connected to a terminal (otherwise print usage)

@@ -1,6 +1,7 @@
-#!/home/oracle/perl/bin/perl -w
+#!/usr/bin/env perl
 
 use Config;
+use warnings;
 use strict;
 
 my %sig_num;

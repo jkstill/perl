@@ -4,7 +4,11 @@
 #
 # for any value of x, create a number between 0 and 1, where larger number are closer to 1
 #
-
+# tags:
+# zero
+# one
+# zero and one
+# 
 
 sub sigmoid {
 
@@ -18,14 +22,20 @@ sub sigmoid {
 }
 
 
-foreach my $i ( -40 .. 40 ) {
+foreach my $i ( -60 .. 60 ) {
 	printf "sigmoid %6d: %6.5f\n" , $i, sigmoid($i);
 }
 
+	printf "sigmoid %6d: %6.5f\n" ,0.458 , sigmoid(0.458);
 
-foreach my $i ( -180 .. -45 ) {
+=head1 
+
+foreach my $i ( -180 .. -35 ) {
+	# not sure why I did the 10**52
 	print "sigmoid $i: " , 10**52 * sigmoid($i), "\n";
 	#print "sigmoid $i: " , sigmoid($i), "\n";
 	#printf "sigmoid %6d: %6.5f\n" , $i, sigmoid($i);
 }
+
+=cut
 

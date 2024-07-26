@@ -37,9 +37,9 @@ print "3: remove first element only\n";
 @a = (getary);
 print Dumper(\@a);
 #
-shift @a;
+#shift @a;
 # this also works
-#@a = @a[1..$#a];
+@a = @a[1..$#a];
 #
 print Dumper(\@a);
 

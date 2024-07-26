@@ -1,4 +1,4 @@
-#!/home/oracle/perl -w
+#!/usr/bin/env perl
 
 # lsa - Oracle Log Switch Analyzer
 # Jared Still
@@ -6,6 +6,7 @@
 # jkstill@bcbso.com
 
 use strict;
+use warnings;
 use Getopt::Long;
 use Date::Manip;
 
@@ -51,10 +52,12 @@ my $lookForDate=0;
 my ($newDate, $oldDate);
 my ($newDateStr, $oldDateStr);
 my $deltaStr = undef;
+my $previousPrintDate = 'NA';
 my $printDate = undef;
 
 my $totalLogSwitchTime = undef;
 my $totalLogSwitches = undef;
+my $previousLogSwitchTime = undef;
 my $dateDelta = undef;
 
 my $debug = undef;
@@ -78,11 +81,17 @@ $optionStr = 'Options: ' . $optionStr if $optionStr;
 
 print STDERR "Working...";
 
+my $previousLine = undef;
+my $line = 'NA';
+
 while(<LOG>) {
 	
+	$previousLine = $line;
+	$line = $_;
+
 	chomp;
 	
-	/Thread.*advanced/ &&do { $lookForDate = 1 };
+	/Thread.*advanced/ && do { $lookForDate = 1 };
 
 	if ( $lookForDate ) {
 
@@ -122,8 +131,44 @@ while(<LOG>) {
 					($minuteDeltaStr * 60 ) +
 					$secondDeltaStr;
 
+				# Jared Still - 2020-06-08
+				# sometimes the 'Thread.*advanced line is not being processed correctly
+				# first saw this on 19.6 - do not yet know why
+				# just dealing with it for now
+				if ($currentLogSwitchTime < 0) {
+					$lookForDate = 0;
+					next;
+				}
 
+				# totalLogSwitchTime undefined the first time through
+
+				
 				$totalLogSwitchTime += $currentLogSwitchTime;
+
+=head1 Date::Manip cannot deal with fractional seconds - this _may_ be the cause of time going backwards
+
+
+				# when two log switches occur within 1 second, things go awry
+				#if ( $totalLogSwitchTime < $before ) {
+				if ($currentLogSwitchTime < 0 ) {
+					warn "\n";
+					warn "!!!! Time Went Backwards\n";
+					warn "Previous Line: $previousLine";
+					warn "         Line: $line";
+					warn " Prev Print Date: $previousPrintDate\n";
+					warn " Curr Print Date: $printDate\n";
+					warn " Old Date: $oldDate\n";
+					warn " New Date: $newDate\n";
+					warn "   Total Log Switch Time: $totalLogSwitchTime\n";
+					warn "Previous Log Switch Time: $previousLogSwitchTime\n" if defined($previousLogSwitchTime);
+					warn " Current Log Switch Time: $currentLogSwitchTime\n";
+					warn "\n";
+				}
+=cut
+
+				$previousLogSwitchTime = $totalLogSwitchTime;
+
+				#print "  Total Log Switch Time: $totalLogSwitchTime\n";
 				$totalLogSwitches++;
 				push(@logSwitches,[$printDate,$deltaStr]);
 
@@ -148,6 +193,7 @@ while(<LOG>) {
 		}
 	}
 
+	$previousPrintDate = $printDate;
 }
 
 print STDERR "\n\n";

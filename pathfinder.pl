@@ -92,7 +92,7 @@ foreach my $path (@paths) {
 exit;
 
 sub wanted {
-	/^$file2find$/s
+	/.*$file2find.*/s
 		&& print("  $name\n");
 }
 

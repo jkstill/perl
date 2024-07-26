@@ -1,7 +1,13 @@
-#!/home/oracle/perl/bin/perl -w
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
 
 
-my $EarthOrbitRadiusMiles	= 97 * 10**6;
+# all sizes are in miles
+
+my $sunRadius = 432450;
+my $EarthOrbitRadiusMiles	= $sunRadius + (97 * 10**6);
 my $EarthRadiusMiles		= 3963.5;
 my $PI						= 3.141593;
 my $EarthProfileAreaMiles	= $PI * ( $EarthRadiusMiles**2 );

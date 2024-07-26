@@ -7,5 +7,7 @@ print Dumper(\@a);
 
 unshift @a,'a','b';
 
+push @a,'f','g';
+
 print Dumper(\@a);
 

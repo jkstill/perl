@@ -76,3 +76,5 @@ sub formatLine2 {
 	eval $format;
 }
 
+1;
+

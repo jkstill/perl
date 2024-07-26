@@ -1,4 +1,4 @@
-#!/u01/app/perl/bin/perl
+#!/usr/bin/env perl
 
 # template for DBI programs
 
@@ -65,8 +65,8 @@ my $sql=q{select user from mydual};
 my $sth = $dbh->prepare($sql,{ora_check_sql => 0});
 
 eval {
-	local $dbh->{RaiseError} = 0;
-	local $dbh->{PrintError} = 1;
+	local $dbh->{RaiseError} = 1;
+	local $dbh->{PrintError} = 0;
 	$sth->execute;
 };
 

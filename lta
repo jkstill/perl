@@ -1,4 +1,4 @@
-#!/home/oracle/perl -w
+#!/usr/bin/env perl
 
 # lsa - log time analyzer
 # for IW team 
@@ -9,6 +9,7 @@
 
 use strict;
 no strict 'vars';
+use warnings;
 use Getopt::Long;
 use Date::Manip;
 

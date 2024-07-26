@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
 while (<>) {
-	print (eval $_);
-	print "\n";
+	s/,+/_/g;
+	my $result = (eval $_);
 
 	if ($@) {
 		print qq{
@@ -15,4 +15,15 @@ Use CTL-C to exit
 };
 	}
 
+	print commify($result) . "\n";
+
 }
+
+sub commify {
+	# wn - working number
+	my $wn = shift;
+	unless ( $wn =~ /^\-{0,1}[0-9]+\.{0,1}[0-9]*$/ ) { return $wn; }
+	1 while $wn =~ s/^(-?\d+)(\d{3})/$1,$2/;
+	return $wn;
+}
+

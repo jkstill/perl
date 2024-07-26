@@ -5,7 +5,7 @@ use warnings;
 use Data::Dumper;
 
 
-my @a=qw[a b c d e g f h];
+my @a=qw[a b c d e f g h];
 
 print Dumper(\@a);
 
@@ -18,5 +18,16 @@ my @b = splice(@a,3,1);
 
 print '@b contains the elements removed - ', Dumper(\@b);
 
-print 'd is removed fomr @a - ', Dumper(\@a);
+print 'd is removed from @a - ', Dumper(\@a);
 
+# now put it back
+
+splice(@a,3,0,@b);
+
+print 'd is added back to @a - ', Dumper(\@a);
+
+print "\nnow remove multiple elements\n";
+
+splice(@a,3,1);
+
+print 'd is added back to @a - ', Dumper(\@a);

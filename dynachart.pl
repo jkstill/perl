@@ -20,14 +20,25 @@ my ($help,$man);
 my @chartCols;
 my $categoryColName='';
 my $categoryColNum=0;
+my $secondaryAxisCol='';
+my $autoFilterEnabled=1;
+
+my $chartType='line';
+my @chartTypesAvailable=qw(area bar column line pie doughnut scatter stock);
+
 my $delimiter=','; # default delimiter of comma
+my $listAvailableColumns=0;
 
 Getopt::Long::GetOptions(
 	\%optctl, 
 	'spreadsheet-file=s',
 	'debug!' => \$debug,
 	'chart-cols=s{1,10}' => \@chartCols,
+	'chart-type=s' => \$chartType,
+	'secondary-axis-col=s' => \$secondaryAxisCol,
+	'auto-filter-enabled!' => \$autoFilterEnabled,
 	'combined-chart!' => \$combinedChart,
+	'list-available-columns!' => \$listAvailableColumns,
 	'worksheet-col=s',  # creates a separate worksheet per value of this column
 	'category-col=s' => \$categoryColName,
 	'delimiter=s' => \$delimiter,
@@ -36,6 +47,17 @@ Getopt::Long::GetOptions(
 
 pod2usage(1) if $help;
 pod2usage(-verbose => 2) if $man;
+
+
+unless ( grep { $_ eq $chartType } @chartTypesAvailable) { 
+	print qq {
+
+$chartType is not valid chart type
+
+};
+	pod2usage(1);
+}
+
 
 my $xlFile = defined($optctl{'spreadsheet-file'}) ? $optctl{'spreadsheet-file'} : 'asm-metrics.xlsx';
 my $workSheetCol = defined($optctl{'worksheet-col'}) ? $optctl{'worksheet-col'} : 0;
@@ -77,6 +99,14 @@ $labels =~ s/[\r\n]+$//;
 # sadf starts header lines with '# ' - remove that
 $labels =~ s/^#\s+//;
 my @labels = split(/$delimiter\s*/,$labels);
+
+if ($listAvailableColumns) {
+
+	print join("\n",@labels),"\n";
+	exit;
+
+}
+
 
 if ($debug) {
 
@@ -134,6 +164,23 @@ my @chartColPos=();
 	}
 }
 
+# validate secondary axis column
+print "validating secondary axis column\n" if $debug;
+if ($secondaryAxisCol ) {
+	my $foundSecondaryAxisCol=0;
+	foreach my $label ( @labels) {
+		if ($label eq $secondaryAxisCol) {
+			$foundSecondaryAxisCol = 1;
+			last;
+		}
+	}
+
+	if ( ! $foundSecondaryAxisCol ) {
+		warn "\n secondary axis column of '$secondaryAxisCol' is invalid - not using secondary axis\n";
+		$secondaryAxisCol='';
+	}
+}
+
 if ($debug) {
 	print "\nworkSheetCol:\n", Dumper(\$workSheetCol);
 	print "\nChartCols:\n", Dumper(\@chartCols);
@@ -183,6 +230,8 @@ while (<STDIN>) {
 		$workSheets{$currWorkSheetName}->write_row($lineCount{$currWorkSheetName}++,0,\@labels,$boldFormat);
 		# freeze pane at header
 		$workSheets{$currWorkSheetName}->freeze_panes($lineCount{$currWorkSheetName},0);
+		# autofilter
+		$workSheets{$currWorkSheetName}->autofilter(0,0,0,$#data) if $autoFilterEnabled;
 	}
 
 	# setup column widths
@@ -221,7 +270,7 @@ foreach my $workSheet ( keys %workSheets ) {
 	my $chartNum = 0;
 
 	if ($combinedChart) {
-		my $chart = $workBook->add_chart( type => 'line', name => "Combined" . '-' . $workSheets{$workSheet}->get_name(), embedded => 1 );
+		my $chart = $workBook->add_chart( type => $chartType, name => "Combined" . '-' . $workSheets{$workSheet}->get_name(), embedded => 1 );
 		$chart->set_size( width => $chartWidth, height => $chartHeight * $rowHeight);
 		
 		# each chart consumes about 16 rows
@@ -234,7 +283,8 @@ foreach my $workSheet ( keys %workSheets ) {
 				name => $col2Chart,
 				#categories => [$workSheet, 1,$lineCount{$workSheet},2,2],
 				categories => [$workSheet, 1,$lineCount{$workSheet},$categoryColNum,$categoryColNum],
-				values => [$workSheet, 1,$lineCount{$workSheet},$colPos,$colPos]
+				values => [$workSheet, 1,$lineCount{$workSheet},$colPos,$colPos],
+				y2_axis => $col2Chart eq $secondaryAxisCol ? 1 : 0
 			);
 		}
 		
@@ -242,7 +292,7 @@ foreach my $workSheet ( keys %workSheets ) {
 		foreach my $colPos ( @chartColPos ) {
 			my $col2Chart=$labels[$colPos];
 			print "\tCharting column: $col2Chart\n" if $debug;
-			my $chart = $workBook->add_chart( type => 'line', name => "$col2Chart" . '-' . $workSheets{$workSheet}->get_name(), embedded => 1 );
+			my $chart = $workBook->add_chart( type => $chartType, name => "$col2Chart" . '-' . $workSheets{$workSheet}->get_name(), embedded => 1 );
 			$chart->set_size( width => $chartWidth, height => $chartHeight * $rowHeight);
 
 			# each chart consumes about 16 rows
@@ -288,7 +338,11 @@ dynachart.pl
   --spreadsheet-file output file name - defaults to asm-metrics.xlsx
   --worksheet-col name of column used to segragate data into worksheets 
     defaults to a single worksheet if not supplied
+  --auto-filter-enabled enable the drop down Excel filters
+  --chart-type default chart type is 'line'
   --chart-cols list of columns to chart
+  --secondary-axis-col name of the column to be on secondary axis
+                       works only with combined-chart option
 
  dynachart.pl accepts input from STDIN
 
@@ -305,7 +359,11 @@ dynachart.pl [options] [file ...]
    --spreadsheet-file output file name - defaults to asm-metrics.xlsx
    --worksheet-col name of column used to segragate data into worksheets 
      defaults to a single worksheet if not supplied
+  --chart-type default chart type is 'line'
   --chart-cols list of columns to chart
+  --secondary-axis-col name of the column to be on secondary axis
+                       works only with combined-chart option
+  --auto-filter-enabled enable the drop down Excel filters
   --category-col specify the column for the X vector - a timestamp is typically used 
     the name must exactly match that in the header
   --combined-chart create a single chart rather than a chart for each value specified in --chart-cols
@@ -340,6 +398,20 @@ Prints the manual page and exits.
  By default a single worksheet is created.
  When this option is used the column supplied as an argument will be used to segragate data into separate worksheets.
 
+=item B<--chart-type>
+
+ The valid charts are 
+  area 
+  bar 
+  column 
+  line 
+  pie 
+  doughnut 
+  scatter 
+  stock
+
+ The default chart type is 'line'
+
 =item B<--chart-cols>
 
  List of columns to chart
@@ -357,6 +429,20 @@ Prints the manual page and exits.
  The name must exactly match a column from the CSV file
  Typically this line is a timestamp
 
+=item B<--secondary-axis-col>
+
+ Use a secondary axis for one of the series columns
+
+   --chart-cols TIME --chart-cols READS --chart-col BYTES_READ \
+   --secondary-axis-col BYTES_READ 
+
+=item B<--auto-filter-enabled>
+
+  Enable the drop down Excel filters
+
+  Default is ON.  
+  Disable with --noauto-filter-enabled
+
 =item B<--delimiter>
 
  The default input delimiter is a comma - ,
@@ -364,6 +450,10 @@ Prints the manual page and exits.
 
  eg. change to a colon
     --delimiter :
+
+=item B<--list-available-columns>
+
+ List the columns from the first line of the file and exit
 
 =back
 
