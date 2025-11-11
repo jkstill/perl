@@ -1,4 +1,4 @@
-#!/home/oracle/perl/bin/perl -w
+#!/usr/bin/env perl
 
 
 use Getopt::Long;
